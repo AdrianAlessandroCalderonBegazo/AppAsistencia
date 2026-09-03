@@ -3,6 +3,17 @@ const { query } = require('../db');
 const { requireRole } = require('../middleware/requireRole');
 
 const router = express.Router();
+
+// Horario propio del empleado autenticado — cualquier rol, se monta antes de
+// requireRole('admin') a propósito (el resto de /schedules es solo para el panel admin).
+router.get('/me', async (req, res) => {
+  const { rows } = await query(
+    'SELECT * FROM horarios WHERE empleado_id = $1 AND activo = true ORDER BY creado_en DESC LIMIT 1',
+    [req.user.id]
+  );
+  res.json(rows[0] || null);
+});
+
 router.use(requireRole('admin'));
 
 router.get('/employee/:empleadoId', async (req, res) => {

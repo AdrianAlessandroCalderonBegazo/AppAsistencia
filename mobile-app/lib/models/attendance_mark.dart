@@ -96,10 +96,12 @@ class AttendanceMark {
       !pendienteSync && editableHasta != null && DateTime.now().isBefore(editableHasta!);
 
   Map<String, dynamic> toSubmitJson() => {
-        'tipo_marca': tipoMarca.apiValue,
-        'hora_marcada': horaMarcada.toUtc().toIso8601String(),
-        'latitud': latitud,
-        'longitud': longitud,
-        'mock_location': mockLocation,
+        'tipoMarca': tipoMarca.apiValue,
+        'horaMarcada': horaMarcada.toUtc().toIso8601String(),
+        'lat': latitud,
+        'lng': longitud,
+        // el backend todavía no persiste ni usa esta señal; se envía igual para
+        // no perderla el día que se agregue como capa extra de defensa server-side.
+        'mockLocation': mockLocation,
       };
 }

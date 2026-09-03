@@ -50,12 +50,10 @@ async function request(path, { method = 'GET', body, headers, isBlob = false, ..
       ...rest,
     })
   } catch (err) {
+    // El motivo real (host inalcanzable, CORS bloqueado, URL mal armada, etc.) solo
+    // aparece en la consola del navegador — fetch() nunca lo expone en el mensaje del Error.
+    console.error(`[api] fetch a ${BASE_URL}${path} falló:`, err)
     throw new ApiError('no se pudo conectar con el servidor', 0, null)
-  }
-
-  if (res.status === 401) {
-    onUnauthorized()
-    throw new ApiError('sesión expirada, vuelve a iniciar sesión', 401, null)
   }
 
   if (isBlob) {
@@ -66,8 +64,18 @@ async function request(path, { method = 'GET', body, headers, isBlob = false, ..
   const contentType = res.headers.get('content-type') || ''
   const data = contentType.includes('application/json') ? await res.json().catch(() => null) : null
 
+  if (res.status === 401) {
+    // Un 401 sin token enviado es una credencial rechazada (login o cambio de contraseña
+    // incorrectos), no una sesión que expiró — solo lo segundo debe forzar un logout global.
+    if (token) {
+      onUnauthorized()
+      throw new ApiError('sesión expirada, vuelve a iniciar sesión', 401, data)
+    }
+    throw new ApiError(data?.error || data?.message || 'credenciales inválidas', 401, data)
+  }
+
   if (!res.ok) {
-    const message = data?.message || data?.error || `error ${res.status}`
+    const message = data?.error || data?.message || `error ${res.status}`
     throw new ApiError(message, res.status, data)
   }
 

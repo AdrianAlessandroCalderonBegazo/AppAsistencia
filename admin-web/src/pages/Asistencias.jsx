@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Pencil, History } from 'lucide-react'
-import { getEmpleados, getAsistencias, updateAsistencia } from '../api/resources.js'
+import { getEmpleados, getAsistencias, updateAsistenciaAdmin } from '../api/resources.js'
 import { PageHeader, Card, Select, Input, Button, Textarea, Banner, EmptyState } from '../components/ui.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
+
+const TIPOS_MARCA = [
+  { value: 'entrada', label: 'entrada' },
+  { value: 'salida_almuerzo', label: 'salida a almuerzo' },
+  { value: 'regreso_almuerzo', label: 'regreso de almuerzo' },
+  { value: 'salida', label: 'salida final' },
+]
+
+function tipoLabel(tipo) {
+  return TIPOS_MARCA.find((t) => t.value === tipo)?.label || tipo
+}
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10)
@@ -15,26 +26,34 @@ function daysAgoIso(n) {
   return d.toISOString().slice(0, 10)
 }
 
+// "2024-05-01T13:00:00.000Z" -> valor válido para <input type="datetime-local">
+function toDatetimeLocal(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export default function Asistencias() {
   const [empleados, setEmpleados] = useState([])
   const [filters, setFilters] = useState({
-    empleado_id: '',
-    fecha_inicio: daysAgoIso(7),
-    fecha_fin: todayIso(),
+    empleadoId: '',
+    desde: daysAgoIso(7),
+    hasta: todayIso(),
   })
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(null)
-  const [entradaEdit, setEntradaEdit] = useState('')
-  const [salidaEdit, setSalidaEdit] = useState('')
+  const [tipoMarcaEdit, setTipoMarcaEdit] = useState('entrada')
+  const [horaEdit, setHoraEdit] = useState('')
   const [motivo, setMotivo] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
 
   useEffect(() => {
-    getEmpleados({ activo: true })
-      .then((data) => setEmpleados(Array.isArray(data) ? data : data?.data || []))
+    getEmpleados()
+      .then((data) => setEmpleados((data || []).filter((e) => e.estado === 'activo')))
       .catch(() => {})
   }, [])
 
@@ -43,7 +62,7 @@ export default function Asistencias() {
     setError(null)
     try {
       const data = await getAsistencias(filters)
-      setRows(Array.isArray(data) ? data : data?.data || [])
+      setRows(data || [])
     } catch (err) {
       setError(err.message || 'no se pudieron cargar las asistencias')
     } finally {
@@ -58,8 +77,8 @@ export default function Asistencias() {
 
   function openEdit(row) {
     setEditing(row)
-    setEntradaEdit(row.hora_entrada || row.entrada || '')
-    setSalidaEdit(row.hora_salida || row.salida || '')
+    setTipoMarcaEdit(row.tipo_marca)
+    setHoraEdit(toDatetimeLocal(row.hora_marcada))
     setMotivo('')
     setSaveError(null)
   }
@@ -72,9 +91,9 @@ export default function Asistencias() {
     setSaving(true)
     setSaveError(null)
     try {
-      await updateAsistencia(editing.id, {
-        hora_entrada: entradaEdit || undefined,
-        hora_salida: salidaEdit || undefined,
+      await updateAsistenciaAdmin(editing.id, {
+        tipoMarca: tipoMarcaEdit,
+        horaMarcada: horaEdit ? new Date(horaEdit).toISOString() : undefined,
         motivo: motivo.trim(),
       })
       setEditing(null)
@@ -88,22 +107,27 @@ export default function Asistencias() {
 
   function badgesFor(row) {
     const badges = []
-    if (row.tiene_anomalia || row.anomalias?.length) badges.push('anomalia')
-    if (row.sincronizacion_tardia || row.sync_tardio) badges.push('sincronizacion_tardia')
-    if (row.creada_por_solicitud || row.origen === 'solicitud_aprobada') badges.push('creada_por_solicitud')
-    if (row.editada_por_admin) badges.push('editada')
+    if (row.es_anomalia) badges.push('anomalia')
+    if (row.sincronizacion_tardia) badges.push('sincronizacion_tardia')
+    if (row.origen === 'solicitud_aprobada') badges.push('creada_por_solicitud')
+    if (row.origen === 'correccion_admin') badges.push('editada')
+    if (row.anulada) badges.push('inactivo')
     return badges
   }
 
   const columns = [
-    { key: 'empleado', header: 'empleado', render: (row) => row.empleado_nombre || row.empleado?.nombre || '—' },
+    { key: 'empleado', header: 'empleado', render: (row) => row.empleado_nombre || '—' },
     { key: 'fecha', header: 'fecha' },
-    { key: 'entrada', header: 'entrada', render: (row) => row.hora_entrada || row.entrada || '—' },
-    { key: 'salida', header: 'salida', render: (row) => row.hora_salida || row.salida || '—' },
+    { key: 'tipo_marca', header: 'tipo de marca', render: (row) => tipoLabel(row.tipo_marca) },
     {
-      key: 'estado',
-      header: 'estado',
-      render: (row) => <StatusPill status={row.estado || 'presente'} />,
+      key: 'hora',
+      header: 'hora',
+      render: (row) => new Date(row.hora_marcada).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }),
+    },
+    {
+      key: 'area',
+      header: 'ubicación',
+      render: (row) => <StatusPill status={row.dentro_area ? 'dentro_area' : 'fuera_area'} />,
     },
     {
       key: 'badges',
@@ -142,8 +166,8 @@ export default function Asistencias() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Select
             label="empleado"
-            value={filters.empleado_id}
-            onChange={(e) => setFilters((f) => ({ ...f, empleado_id: e.target.value }))}
+            value={filters.empleadoId}
+            onChange={(e) => setFilters((f) => ({ ...f, empleadoId: e.target.value }))}
           >
             <option value="">todos</option>
             {empleados.map((e) => (
@@ -155,14 +179,14 @@ export default function Asistencias() {
           <Input
             label="desde"
             type="date"
-            value={filters.fecha_inicio}
-            onChange={(e) => setFilters((f) => ({ ...f, fecha_inicio: e.target.value }))}
+            value={filters.desde}
+            onChange={(e) => setFilters((f) => ({ ...f, desde: e.target.value }))}
           />
           <Input
             label="hasta"
             type="date"
-            value={filters.fecha_fin}
-            onChange={(e) => setFilters((f) => ({ ...f, fecha_fin: e.target.value }))}
+            value={filters.hasta}
+            onChange={(e) => setFilters((f) => ({ ...f, hasta: e.target.value }))}
           />
           <div className="flex items-end">
             <Button onClick={load} className="w-full">
@@ -199,20 +223,19 @@ export default function Asistencias() {
           <Banner tone="warning">
             toda corrección queda registrada en el historial junto con el motivo indicado.
           </Banner>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="hora de entrada"
-              type="time"
-              value={entradaEdit}
-              onChange={(e) => setEntradaEdit(e.target.value)}
-            />
-            <Input
-              label="hora de salida"
-              type="time"
-              value={salidaEdit}
-              onChange={(e) => setSalidaEdit(e.target.value)}
-            />
-          </div>
+          <Select label="tipo de marca" value={tipoMarcaEdit} onChange={(e) => setTipoMarcaEdit(e.target.value)}>
+            {TIPOS_MARCA.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </Select>
+          <Input
+            label="fecha y hora"
+            type="datetime-local"
+            value={horaEdit}
+            onChange={(e) => setHoraEdit(e.target.value)}
+          />
           <Textarea
             label="motivo de la corrección (obligatorio)"
             placeholder="ej. el empleado olvidó marcar salida, se confirma con su jefe directo"

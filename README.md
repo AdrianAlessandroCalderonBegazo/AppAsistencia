@@ -32,6 +32,11 @@ Dos roles completamente separados, sin cuentas híbridas: **empleado** (app móv
 4. **Notificaciones push**: Firebase Cloud Messaging (gratuito). Credenciales vía variables
    de entorno del backend (`FIREBASE_*`) y `google-services.json` / `GoogleService-Info.plist`
    en `mobile-app/` (no se commitean, ver `mobile-app/README.md`).
+5. **App del empleado**: el APK de Android se compila solo, vía GitHub Actions
+   (`.github/workflows/build-apk.yml`), sin necesidad de tener Flutter instalado. Para iOS
+   (sin cuenta de Apple Developer) se publica la misma app como sitio web en Vercel
+   (`mobile-app/vercel.json`) y el empleado la agrega a su pantalla de inicio desde Safari.
+   Detalle completo en `mobile-app/README.md`.
 
 Migrar a un plan pago de cualquiera de estos proveedores es solo cambiar variables de entorno
 (`DATABASE_URL`, URLs, credenciales) — ningún componente depende de una característica

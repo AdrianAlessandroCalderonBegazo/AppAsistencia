@@ -46,12 +46,12 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (dni, password) => {
     setAuthError(null)
     const data = await loginRequest(dni, password)
-    const nextToken = data?.token || data?.access_token
-    const nextUser = data?.usuario || data?.user || data?.empleado || null
-    if (nextToken) {
-      setToken(nextToken)
-      setTokenState(nextToken)
+    const nextUser = { ...data.usuario, debe_cambiar_password: data.debeCambiarPassword }
+    if (nextUser.rol !== 'admin') {
+      throw new Error('esta cuenta no tiene permisos de administrador')
     }
+    setToken(data.accessToken)
+    setTokenState(data.accessToken)
     saveStoredUser(nextUser)
     setUser(nextUser)
     return nextUser
@@ -59,7 +59,11 @@ export function AuthProvider({ children }) {
 
   const changePassword = useCallback(
     async (actual, nueva) => {
-      await changePasswordRequest(actual, nueva)
+      const data = await changePasswordRequest(actual, nueva)
+      // El accessToken viejo todavía trae debe_cambiar_password=true codificado adentro;
+      // sin reemplazarlo el backend seguiría bloqueando todo con PASSWORD_CHANGE_REQUIRED.
+      setToken(data.accessToken)
+      setTokenState(data.accessToken)
       const nextUser = { ...(user || {}), debe_cambiar_password: false }
       saveStoredUser(nextUser)
       setUser(nextUser)

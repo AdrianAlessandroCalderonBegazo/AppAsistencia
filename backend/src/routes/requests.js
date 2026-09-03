@@ -40,6 +40,22 @@ router.get('/pending', requireRole('admin'), async (req, res) => {
   res.json(rows);
 });
 
+// Listado general (admin), con filtro opcional por estado — usado por la bandeja del panel
+// para ver también las solicitudes ya resueltas, no solo las pendientes.
+router.get('/', requireRole('admin'), async (req, res) => {
+  const { estado } = req.query;
+  const params = [];
+  let sql = `SELECT s.*, u.nombre AS empleado_nombre, u.dni AS empleado_dni
+             FROM solicitudes_correccion s JOIN usuarios u ON u.id = s.empleado_id`;
+  if (estado) {
+    params.push(estado);
+    sql += ` WHERE s.estado = $${params.length}`;
+  }
+  sql += ' ORDER BY s.creado_en DESC';
+  const { rows } = await query(sql, params);
+  res.json(rows);
+});
+
 router.patch('/:id/approve', requireRole('admin'), async (req, res) => {
   const { lat, lng, horaMarcada } = req.body;
   if (lat === undefined || lng === undefined || !horaMarcada) {

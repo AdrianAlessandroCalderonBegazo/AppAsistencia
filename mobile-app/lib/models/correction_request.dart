@@ -43,9 +43,9 @@ class CorrectionRequest {
   final DateTime? creadoEn;
 
   Map<String, dynamic> toJson() => {
-        'tipo_marca': tipoMarca.apiValue,
+        'tipoMarca': tipoMarca.apiValue,
         'fecha': fecha.toIso8601String().split('T').first,
-        if (horaSolicitada != null) 'hora_solicitada': horaSolicitada,
-        'mensaje_empleado': mensajeEmpleado,
+        if (horaSolicitada != null) 'horaSolicitada': horaSolicitada,
+        'mensaje': mensajeEmpleado,
       };
 }

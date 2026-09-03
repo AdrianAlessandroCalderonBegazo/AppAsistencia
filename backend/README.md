@@ -72,18 +72,22 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
 - `PATCH /attendance/:id/admin` (admin) — corrección manual; requiere `motivo` en el body y deja
   auditoría en `correcciones_auditoria` (valor anterior/nuevo) antes de aplicar el cambio.
 - `GET /attendance/employee/:empleadoId` (admin) — historial de un empleado.
+- `GET /attendance?empleadoId&desde&hasta` (admin) — marcas de todos los empleados, con filtros
+  opcionales; usada por el dashboard y la vista de asistencias del panel.
 
 ### Solicitudes de corrección (`/requests`)
 - `POST /requests` — empleado crea `{ tipoMarca, fecha, horaSolicitada?, mensaje }`; notifica admins.
 - `GET /requests/mine` — solicitudes propias.
 - `GET /requests/pending` (admin) — solicitudes pendientes.
+- `GET /requests?estado` (admin) — listado general, con filtro opcional de estado.
 - `PATCH /requests/:id/approve` (admin) — `{ lat, lng, horaMarcada }`; genera la marca
   (`origen='solicitud_aprobada'`), la enlaza en `asistencia_generada_id` y notifica al empleado.
 - `PATCH /requests/:id/reject` (admin) — `{ motivo }`; notifica al empleado.
 
-### Horarios (`/schedules`, admin)
-CRUD sobre `horarios`: `GET /schedules/employee/:empleadoId`, `POST /schedules`,
-`PATCH /schedules/:id`, `DELETE /schedules/:id` (desactiva en vez de borrar).
+### Horarios (`/schedules`)
+- `GET /schedules/me` — cualquier usuario autenticado; horario activo del propio empleado.
+- El resto requiere admin — CRUD sobre `horarios`: `GET /schedules/employee/:empleadoId`,
+  `POST /schedules`, `PATCH /schedules/:id`, `DELETE /schedules/:id` (desactiva en vez de borrar).
 
 ### Sedes (`/sites`)
 `GET /sites` (cualquier usuario autenticado), `POST/PATCH/DELETE /sites` (admin) sobre

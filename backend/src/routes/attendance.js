@@ -112,6 +112,27 @@ router.post('/sync', async (req, res) => {
   res.status(207).json({ resultados });
 });
 
+// Listado de marcas de todos los empleados (admin), con filtros opcionales — usado por el
+// dashboard (marcas del día) y la vista de asistencias del panel.
+router.get('/', requireRole('admin'), async (req, res) => {
+  const { empleadoId, desde, hasta } = req.query;
+  const params = [];
+  const conditions = [];
+
+  if (empleadoId) { params.push(empleadoId); conditions.push(`a.empleado_id = $${params.length}`); }
+  if (desde) { params.push(desde); conditions.push(`a.fecha >= $${params.length}`); }
+  if (hasta) { params.push(hasta); conditions.push(`a.fecha <= $${params.length}`); }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const { rows } = await query(
+    `SELECT a.*, u.nombre AS empleado_nombre, u.dni AS empleado_dni
+     FROM asistencias a JOIN usuarios u ON u.id = a.empleado_id
+     ${whereClause} ORDER BY a.fecha DESC, a.hora_marcada DESC`,
+    params
+  );
+  res.json(rows);
+});
+
 router.get('/history', async (req, res) => {
   const { desde, hasta } = req.query;
   const params = [req.user.id];

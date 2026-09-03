@@ -20,18 +20,25 @@ app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// Todas las rutas de negocio quedan bajo /api — es lo que esperan admin-web y mobile-app
+// (VITE_API_URL / API_BASE_URL apuntan a ".../api"). /health queda fuera a propósito, es lo
+// que suelen pegar los health checks de Render sin conocer el prefijo de la app.
+const api = express.Router();
+
 // /auth se monta antes de requirePasswordChanged: login, refresh y change-password deben
 // funcionar aunque el usuario todavía tenga debe_cambiar_password = true.
-app.use('/auth', authRoutes);
+api.use('/auth', authRoutes);
 
-app.use(authenticate, requirePasswordChanged);
+api.use(authenticate, requirePasswordChanged);
 
-app.use('/employees', employeeRoutes);
-app.use('/attendance', attendanceRoutes);
-app.use('/requests', requestRoutes);
-app.use('/schedules', scheduleRoutes);
-app.use('/sites', siteRoutes);
-app.use('/reports', reportRoutes);
+api.use('/employees', employeeRoutes);
+api.use('/attendance', attendanceRoutes);
+api.use('/requests', requestRoutes);
+api.use('/schedules', scheduleRoutes);
+api.use('/sites', siteRoutes);
+api.use('/reports', reportRoutes);
+
+app.use('/api', api);
 
 app.use((req, res) => res.status(404).json({ error: 'Ruta no encontrada.' }));
 

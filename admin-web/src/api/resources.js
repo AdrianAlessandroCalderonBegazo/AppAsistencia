@@ -2,36 +2,39 @@ import { api } from './client.js'
 
 // --- auth ---
 export const login = (dni, password) => api.post('/auth/login', { dni, password })
-export const changePassword = (password_actual, password_nueva) =>
-  api.post('/auth/change-password', { password_actual, password_nueva })
+export const changePassword = (currentPassword, newPassword) =>
+  api.post('/auth/change-password', { currentPassword, newPassword })
 
 // --- empleados ---
-export const getEmpleados = (params = {}) => api.get(`/empleados${qs(params)}`)
-export const createEmpleado = (data) => api.post('/empleados', data)
-export const updateEmpleado = (id, data) => api.patch(`/empleados/${id}`, data)
-export const deactivateEmpleado = (id) => api.patch(`/empleados/${id}`, { activo: false })
+export const getEmpleados = () => api.get('/employees')
+export const createEmpleado = (data) => api.post('/employees', data)
+export const resetEmpleadoPassword = (id) => api.patch(`/employees/${id}/reset-password`)
+export const deactivateEmpleado = (id) => api.patch(`/employees/${id}/deactivate`)
+export const reactivateEmpleado = (id) => api.patch(`/employees/${id}/reactivate`)
+export const updateEmpleadoSede = (id, sedeId) => api.patch(`/employees/${id}/sede`, { sedeId })
 
 // --- horarios ---
-export const getHorarios = (empleadoId) =>
-  api.get(`/horarios${empleadoId ? qs({ empleado_id: empleadoId }) : ''}`)
-export const createHorario = (data) => api.post('/horarios', data)
-export const updateHorario = (id, data) => api.patch(`/horarios/${id}`, data)
+export const getHorarios = (empleadoId) => api.get(`/schedules/employee/${empleadoId}`)
+export const createHorario = (data) => api.post('/schedules', data)
+export const updateHorario = (id, data) => api.patch(`/schedules/${id}`, data)
+export const deleteHorario = (id) => api.del(`/schedules/${id}`)
 
 // --- asistencias ---
-export const getAsistencias = (params = {}) => api.get(`/asistencias${qs(params)}`)
-export const updateAsistencia = (id, data) => api.patch(`/asistencias/${id}`, data)
+export const getAsistencias = (params = {}) => api.get(`/attendance${qs(params)}`)
+export const updateAsistenciaAdmin = (id, data) => api.patch(`/attendance/${id}/admin`, data)
 
 // --- solicitudes de corrección ---
-export const getSolicitudes = (params = {}) => api.get(`/solicitudes_correccion${qs(params)}`)
-export const resolveSolicitud = (id, estado, respuesta) =>
-  api.patch(`/solicitudes_correccion/${id}`, { estado, respuesta })
+export const getSolicitudes = (estado) => api.get(`/requests${qs({ estado })}`)
+export const approveSolicitud = (id, data) => api.patch(`/requests/${id}/approve`, data)
+export const rejectSolicitud = (id, motivo) => api.patch(`/requests/${id}/reject`, { motivo })
 
 // --- empresas / sedes ---
-export const getSedes = () => api.get('/empresas_sedes')
-export const updateSede = (id, data) => api.patch(`/empresas_sedes/${id}`, data)
+export const getSedes = () => api.get('/sites')
+export const createSede = (data) => api.post('/sites', data)
+export const updateSede = (id, data) => api.patch(`/sites/${id}`, data)
 
 // --- reportes ---
-export const getReporteCsvBlob = (params = {}) => api.blob(`/reportes/export${qs(params)}`)
+export const getReporteCsvBlob = (params = {}) => api.blob(`/reports/attendance.csv${qs(params)}`)
 
 function qs(params) {
   const clean = Object.fromEntries(
