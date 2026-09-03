@@ -50,6 +50,9 @@ async function request(path, { method = 'GET', body, headers, isBlob = false, ..
       ...rest,
     })
   } catch (err) {
+    // El motivo real (host inalcanzable, CORS bloqueado, URL mal armada, etc.) solo
+    // aparece en la consola del navegador — fetch() nunca lo expone en el mensaje del Error.
+    console.error(`[api] fetch a ${BASE_URL}${path} falló:`, err)
     throw new ApiError('no se pudo conectar con el servidor', 0, null)
   }
 
