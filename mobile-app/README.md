@@ -27,8 +27,7 @@ mismo backend (`../backend`); esta app no incluye ninguna función de admin.
 
 ## Cómo correrlo
 
-Requiere el SDK de Flutter instalado (no incluido en este entorno de
-generación de código). Con el SDK disponible:
+Requiere el SDK de Flutter instalado.
 
 ```bash
 cd mobile-app
@@ -39,9 +38,48 @@ flutter run --dart-define=API_BASE_URL=https://tu-backend.example.com/api
 Si no se pasa `API_BASE_URL`, se usa `http://localhost:3000/api` (útil para
 correr contra el backend local en desarrollo, ver `../backend/.env.example`).
 
-Para builds de release, pasa la misma variable con `flutter build apk` /
-`flutter build ios` (o configúrala por flavor si el pilotaje crece más allá
-de los ~30 empleados iniciales).
+## Compilar el APK (Android)
+
+No hace falta tener Flutter ni el Android SDK instalados localmente: el
+workflow `.github/workflows/build-apk.yml` (en la raíz del repo) compila el
+APK en GitHub Actions.
+
+1. En GitHub, ve a **Settings → Secrets and variables → Actions → Variables**
+   del repo y crea `API_BASE_URL` con la URL del backend ya desplegado
+   (ej. `https://asistencia-backend.onrender.com/api`).
+2. Ve a la pestaña **Actions → build android apk → Run workflow** (o simplemente
+   haz push a `main` tocando algo en `mobile-app/`).
+3. Cuando termine, descarga el artifact `asistencia-empleado-apk` — ahí está
+   el `app-release.apk` listo para instalar en cualquier Android (activa
+   "orígenes desconocidos" en el celular para instalarlo fuera de Play Store).
+
+Si prefieres compilarlo vos mismo con el SDK instalado:
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=https://tu-backend.example.com/api
+```
+El archivo queda en `build/app/outputs/flutter-apk/app-release.apk`.
+
+## Publicar la versión web (iOS — "agregar a inicio")
+
+Sin cuenta de Apple Developer ni Mac con Xcode, la forma más simple de que
+un iPhone tenga esta app como ícono en la pantalla de inicio es compilar la
+misma app Flutter para web y que el usuario la agregue desde Safari
+("compartir" → "agregar a inicio"); queda instalada en modo standalone, sin
+la barra de Safari, gracias al `manifest.json`/meta tags ya configurados en
+`web/`.
+
+Desplegar en Vercel:
+1. Importa este repo en Vercel, con **Root Directory** = `mobile-app`.
+2. En **Settings → Environment Variables** agrega `API_BASE_URL` con la URL
+   del backend en Render.
+3. Vercel usa `vercel.json`/`vercel-build.sh` de esta carpeta, que descargan
+   Flutter y corren `flutter build web` automáticamente — no requiere
+   configuración de build adicional.
+4. Comparte la URL resultante a los empleados con iPhone; en Safari:
+   compartir → "agregar a pantalla de inicio".
+
+Este mismo build sirve también para Android (una PWA es una alternativa al
+APK si alguien prefiere no instalar un archivo .apk).
 
 ## Configuración de Firebase (push)
 
@@ -58,38 +96,16 @@ de fallar. Para habilitarlo:
 - El token FCM del dispositivo se registra automáticamente contra el backend
   después del login (`AuthService.registerFcmToken`).
 
-Este proyecto se generó a mano siguiendo la estructura estándar de
-`flutter create` (no se ejecutó el comando porque el SDK de Flutter no está
-disponible en este entorno). `android/` e `ios/` no se incluyeron: al correr
-`flutter create --org com.icr .` sobre este directorio, Flutter genera esas
-carpetas nativas sin tocar nada de `lib/`.
+## Endpoints usados
 
-## Contrato de API asumido
-
-El backend (`../backend`) todavía no tiene rutas implementadas al momento de
-escribir esta app, así que los endpoints usados aquí son el contrato
-propuesto, consistente con `database/schema.sql`:
-
-| Método | Endpoint | Uso |
-| --- | --- | --- |
-| POST | `/auth/login` | `{ dni, password }` → `{ token, usuario }` |
-| POST | `/auth/cambiar-password` | `{ password_actual, password_nueva }` |
-| POST | `/auth/fcm-token` | registra el token push del dispositivo |
-| GET | `/asistencias?rango=hoy` | marcas del empleado autenticado hoy |
-| GET | `/asistencias?desde=&hasta=` | historial por rango de fechas |
-| POST | `/asistencias` | `{ tipo_marca, hora_marcada, latitud, longitud, mock_location }` |
-| DELETE | `/asistencias/:id` | deshacer una marca dentro de `editable_hasta` |
-| POST | `/asistencias/sync` | reenvío de una marca capturada offline |
-| GET | `/horarios/mio` | horario asignado del empleado |
-| GET | `/solicitudes` | solicitudes de corrección propias |
-| POST | `/solicitudes` | `{ tipo_marca, fecha, hora_solicitada?, mensaje_empleado }` |
-
-Los nombres de campo (snake_case, en español) siguen exactamente las
-columnas de `asistencias`, `solicitudes_correccion` y `horarios` en
-`database/schema.sql`, para minimizar el mapeo cuando el backend implemente
-estas rutas. Si el backend termina usando otros nombres de endpoint, solo
-hay que ajustar `lib/services/*_service.dart` — el resto de la app no
-conoce detalles de transporte.
+Los servicios en `lib/services/*_service.dart` llaman directamente a las
+rutas reales del backend (ver el detalle completo en `../backend/README.md`):
+`POST /auth/login`, `POST /auth/change-password`, `PUT /employees/me/fcm-token`,
+`POST /attendance`, `POST /attendance/sync`, `GET /attendance/history`,
+`DELETE /attendance/:id`, `GET /schedules/me`, `GET /requests/mine` y
+`POST /requests`. Si cambia algún contrato del backend, solo hay que
+ajustar el service correspondiente — el resto de la app no conoce detalles
+de transporte.
 
 ## Estructura
 

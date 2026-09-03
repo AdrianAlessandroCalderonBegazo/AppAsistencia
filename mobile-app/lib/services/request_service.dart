@@ -7,13 +7,13 @@ class RequestService {
   final ApiClient _client;
 
   Future<List<CorrectionRequest>> mine() async {
-    final response = await _client.dio.get('/solicitudes');
+    final response = await _client.dio.get('/requests/mine');
     final list = response.data as List;
     return list.map((e) => CorrectionRequest.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<CorrectionRequest> create(CorrectionRequest request) async {
-    final response = await _client.dio.post('/solicitudes', data: request.toJson());
+    final response = await _client.dio.post('/requests', data: request.toJson());
     return CorrectionRequest.fromJson(response.data as Map<String, dynamic>);
   }
 }

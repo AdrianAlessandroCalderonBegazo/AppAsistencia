@@ -84,9 +84,10 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
   (`origen='solicitud_aprobada'`), la enlaza en `asistencia_generada_id` y notifica al empleado.
 - `PATCH /requests/:id/reject` (admin) — `{ motivo }`; notifica al empleado.
 
-### Horarios (`/schedules`, admin)
-CRUD sobre `horarios`: `GET /schedules/employee/:empleadoId`, `POST /schedules`,
-`PATCH /schedules/:id`, `DELETE /schedules/:id` (desactiva en vez de borrar).
+### Horarios (`/schedules`)
+- `GET /schedules/me` — cualquier usuario autenticado; horario activo del propio empleado.
+- El resto requiere admin — CRUD sobre `horarios`: `GET /schedules/employee/:empleadoId`,
+  `POST /schedules`, `PATCH /schedules/:id`, `DELETE /schedules/:id` (desactiva en vez de borrar).
 
 ### Sedes (`/sites`)
 `GET /sites` (cualquier usuario autenticado), `POST/PATCH/DELETE /sites` (admin) sobre

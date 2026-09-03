@@ -7,7 +7,7 @@ class ScheduleService {
   final ApiClient _client;
 
   Future<Schedule?> mySchedule() async {
-    final response = await _client.dio.get('/horarios/mio');
+    final response = await _client.dio.get('/schedules/me');
     if (response.data == null) return null;
     return Schedule.fromJson(response.data as Map<String, dynamic>);
   }

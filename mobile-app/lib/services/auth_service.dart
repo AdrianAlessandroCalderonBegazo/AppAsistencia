@@ -12,18 +12,24 @@ class AuthService {
       'password': password,
     });
     final data = response.data as Map<String, dynamic>;
-    await _client.saveToken(data['token'] as String);
-    return User.fromJson(data['usuario'] as Map<String, dynamic>);
+    await _client.saveToken(data['accessToken'] as String);
+    final usuario = data['usuario'] as Map<String, dynamic>;
+    // debeCambiarPassword viaja en la raíz de la respuesta de login, no dentro de "usuario".
+    return User.fromJson({...usuario, 'debe_cambiar_password': data['debeCambiarPassword']});
   }
 
   Future<void> changePassword({
     required String passwordActual,
     required String passwordNueva,
   }) async {
-    await _client.dio.post('/auth/cambiar-password', data: {
-      'password_actual': passwordActual,
-      'password_nueva': passwordNueva,
+    final response = await _client.dio.post('/auth/change-password', data: {
+      'currentPassword': passwordActual,
+      'newPassword': passwordNueva,
     });
+    final data = response.data as Map<String, dynamic>;
+    // El accessToken viejo todavía trae debe_cambiar_password=true codificado adentro; sin
+    // reemplazarlo el backend seguiría bloqueando todo con PASSWORD_CHANGE_REQUIRED.
+    await _client.saveToken(data['accessToken'] as String);
   }
 
   Future<void> logout() => _client.clearToken();
@@ -31,6 +37,6 @@ class AuthService {
   Future<bool> get hasSession => _client.hasSession;
 
   Future<void> registerFcmToken(String token) async {
-    await _client.dio.post('/auth/fcm-token', data: {'fcm_token': token});
+    await _client.dio.put('/employees/me/fcm-token', data: {'fcmToken': token});
   }
 }

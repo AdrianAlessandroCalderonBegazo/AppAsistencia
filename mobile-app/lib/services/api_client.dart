@@ -50,7 +50,7 @@ class ApiClient {
 String friendlyErrorMessage(Object error) {
   if (error is DioException) {
     final data = error.response?.data;
-    if (data is Map && data['message'] is String) return data['message'] as String;
+    if (data is Map && data['error'] is String) return data['error'] as String;
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
