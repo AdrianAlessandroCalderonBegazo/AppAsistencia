@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { UserMinus, Search } from 'lucide-react'
-import { getEmpleados, deactivateEmpleado } from '../api/resources.js'
+import { UserMinus, UserCheck, Search } from 'lucide-react'
+import { getEmpleados, deactivateEmpleado, reactivateEmpleado } from '../api/resources.js'
 import { PageHeader, Card, Input, Button, Banner, EmptyState } from '../components/ui.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import DataTable from '../components/DataTable.jsx'
@@ -12,7 +12,7 @@ export default function EmpleadoBaja() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
-  const [target, setTarget] = useState(null)
+  const [target, setTarget] = useState(null) // { row, decision: 'baja' | 'alta' }
   const [confirming, setConfirming] = useState(false)
 
   async function load() {
@@ -20,7 +20,7 @@ export default function EmpleadoBaja() {
     setError(null)
     try {
       const data = await getEmpleados()
-      setEmpleados(Array.isArray(data) ? data : data?.data || [])
+      setEmpleados(data || [])
     } catch (err) {
       setError(err.message || 'no se pudieron cargar los empleados')
     } finally {
@@ -41,17 +41,22 @@ export default function EmpleadoBaja() {
     )
   })
 
-  async function confirmDeactivate() {
+  async function confirmAction() {
     if (!target) return
     setConfirming(true)
     setError(null)
     try {
-      await deactivateEmpleado(target.id)
-      setSuccess(`se dio de baja a ${target.nombre || target.dni}`)
+      if (target.decision === 'baja') {
+        await deactivateEmpleado(target.row.id)
+        setSuccess(`se dio de baja a ${target.row.nombre || target.row.dni}`)
+      } else {
+        await reactivateEmpleado(target.row.id)
+        setSuccess(`se reactivó a ${target.row.nombre || target.row.dni}`)
+      }
       setTarget(null)
       await load()
     } catch (err) {
-      setError(err.message || 'no se pudo dar de baja al empleado')
+      setError(err.message || 'no se pudo procesar el cambio')
     } finally {
       setConfirming(false)
     }
@@ -61,20 +66,23 @@ export default function EmpleadoBaja() {
     { key: 'nombre', header: 'empleado' },
     { key: 'dni', header: 'dni' },
     {
-      key: 'activo',
+      key: 'estado',
       header: 'estado',
-      render: (row) => <StatusPill status={row.activo === false ? 'inactivo' : 'activo'} />,
+      render: (row) => <StatusPill status={row.estado} />,
     },
     {
       key: 'accion',
       header: '',
       render: (row) =>
-        row.activo === false ? (
-          <span className="text-xs text-zinc-400">ya inactivo</span>
-        ) : (
-          <Button variant="danger" onClick={() => setTarget(row)} className="px-3 py-1.5 text-xs">
+        row.estado === 'activo' ? (
+          <Button variant="danger" onClick={() => setTarget({ row, decision: 'baja' })} className="px-3 py-1.5 text-xs">
             <UserMinus size={14} />
             dar de baja
+          </Button>
+        ) : (
+          <Button variant="secondary" onClick={() => setTarget({ row, decision: 'alta' })} className="px-3 py-1.5 text-xs">
+            <UserCheck size={14} />
+            reactivar
           </Button>
         ),
     },
@@ -117,22 +125,34 @@ export default function EmpleadoBaja() {
       <Modal
         open={!!target}
         onClose={() => setTarget(null)}
-        title="confirmar baja"
+        title={target?.decision === 'baja' ? 'confirmar baja' : 'confirmar reactivación'}
         footer={
           <>
             <Button variant="secondary" onClick={() => setTarget(null)}>
               cancelar
             </Button>
-            <Button variant="danger" onClick={confirmDeactivate} disabled={confirming}>
-              {confirming ? 'procesando…' : 'sí, dar de baja'}
+            <Button
+              variant={target?.decision === 'baja' ? 'danger' : 'primary'}
+              onClick={confirmAction}
+              disabled={confirming}
+            >
+              {confirming ? 'procesando…' : target?.decision === 'baja' ? 'sí, dar de baja' : 'sí, reactivar'}
             </Button>
           </>
         }
       >
         <p>
-          ¿confirmas que deseas dar de baja a{' '}
-          <strong>{target?.nombre || target?.dni}</strong>? dejará de poder marcar asistencia, pero su
-          historial se conserva.
+          {target?.decision === 'baja' ? (
+            <>
+              ¿confirmas que deseas dar de baja a <strong>{target?.row?.nombre || target?.row?.dni}</strong>? dejará
+              de poder iniciar sesión, pero su historial de asistencia se conserva.
+            </>
+          ) : (
+            <>
+              ¿confirmas que deseas reactivar a <strong>{target?.row?.nombre || target?.row?.dni}</strong>? podrá
+              volver a iniciar sesión y marcar asistencia.
+            </>
+          )}
         </p>
       </Modal>
     </div>

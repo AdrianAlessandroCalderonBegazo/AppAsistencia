@@ -1,37 +1,46 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UserPlus } from 'lucide-react'
-import { createEmpleado } from '../api/resources.js'
+import { createEmpleado, getSedes } from '../api/resources.js'
 import { PageHeader, Card, Input, Select, Button, Banner } from '../components/ui.jsx'
-
-const DIAS = [
-  { key: 'lunes', label: 'lun' },
-  { key: 'martes', label: 'mar' },
-  { key: 'miercoles', label: 'mié' },
-  { key: 'jueves', label: 'jue' },
-  { key: 'viernes', label: 'vie' },
-  { key: 'sabado', label: 'sáb' },
-  { key: 'domingo', label: 'dom' },
-]
+import { DIAS, DIAS_LABORALES_DEFAULT } from '../utils/dias.js'
 
 const initialForm = {
   dni: '',
   nombre: '',
-  sede_id: '',
-  entrada: '08:00',
-  salida: '17:00',
-  almuerzo_inicio: '13:00',
-  almuerzo_fin: '14:00',
-  tolerancia_minutos: 10,
-  dias: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'],
+  sedeId: '',
+  horaEntrada: '08:00',
+  horaSalida: '17:00',
+  horaInicioAlmuerzo: '13:00',
+  horaFinAlmuerzo: '14:00',
+  toleranciaMinutos: 10,
+  diasSemana: DIAS_LABORALES_DEFAULT,
+}
+
+// misma regla que backend/src/utils/genericPassword.js — solo para mostrarle al admin
+// qué contraseña le toca comunicar al empleado (el backend nunca la devuelve en texto plano).
+function genericPasswordFor(dni) {
+  const digits = String(dni).replace(/\D/g, '').padEnd(4, '0').slice(0, 4)
+  return `${digits}Asis`
 }
 
 export default function EmpleadoAlta() {
   const navigate = useNavigate()
+  const [sedes, setSedes] = useState([])
   const [form, setForm] = useState(initialForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(false)
+  const [createdInfo, setCreatedInfo] = useState(null)
+
+  useEffect(() => {
+    getSedes()
+      .then((data) => {
+        setSedes(data || [])
+        if (data?.[0]) update('sedeId', String(data[0].id))
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -40,31 +49,36 @@ export default function EmpleadoAlta() {
   function toggleDia(dia) {
     setForm((f) => ({
       ...f,
-      dias: f.dias.includes(dia) ? f.dias.filter((d) => d !== dia) : [...f.dias, dia],
+      diasSemana: f.diasSemana.includes(dia) ? f.diasSemana.filter((d) => d !== dia) : [...f.diasSemana, dia],
     }))
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
-    setSuccess(false)
+    setCreatedInfo(null)
+    if (!form.sedeId) {
+      setError('selecciona una sede')
+      return
+    }
     setLoading(true)
     try {
+      const dni = form.dni.trim()
       await createEmpleado({
-        dni: form.dni.trim(),
+        dni,
         nombre: form.nombre.trim(),
-        sede_id: form.sede_id || undefined,
-        horario: {
-          entrada: form.entrada,
-          salida: form.salida,
-          almuerzo_inicio: form.almuerzo_inicio,
-          almuerzo_fin: form.almuerzo_fin,
-          tolerancia_minutos: Number(form.tolerancia_minutos) || 0,
-          dias: form.dias,
+        sedeId: Number(form.sedeId),
+        horarioInicial: {
+          horaEntrada: form.horaEntrada,
+          horaSalida: form.horaSalida,
+          horaInicioAlmuerzo: form.horaInicioAlmuerzo || null,
+          horaFinAlmuerzo: form.horaFinAlmuerzo || null,
+          toleranciaMinutos: Number(form.toleranciaMinutos) || 0,
+          diasSemana: form.diasSemana,
         },
       })
-      setSuccess(true)
-      setForm(initialForm)
+      setCreatedInfo({ dni, nombre: form.nombre.trim(), password: genericPasswordFor(dni) })
+      setForm({ ...initialForm, sedeId: form.sedeId })
     } catch (err) {
       setError(err.message || 'no se pudo crear el empleado')
     } finally {
@@ -79,9 +93,12 @@ export default function EmpleadoAlta() {
         description="registra un nuevo empleado con su horario inicial"
       />
 
-      {success && (
+      {createdInfo && (
         <div className="mb-4">
-          <Banner tone="success">empleado creado correctamente</Banner>
+          <Banner tone="success">
+            {createdInfo.nombre || createdInfo.dni} fue creado correctamente. contraseña genérica asignada:{' '}
+            <strong>{createdInfo.password}</strong> — el empleado deberá cambiarla al ingresar por primera vez.
+          </Banner>
         </div>
       )}
       {error && (
@@ -110,12 +127,26 @@ export default function EmpleadoAlta() {
               required
             />
           </div>
-          <Input
-            label="id de sede"
-            hint="id numérico de la sede a la que pertenece (ver sección sedes)"
-            value={form.sede_id}
-            onChange={(e) => update('sede_id', e.target.value)}
-          />
+          <Select
+            label="sede"
+            value={form.sedeId}
+            onChange={(e) => update('sedeId', e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              selecciona una sede…
+            </option>
+            {sedes.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.nombre}
+              </option>
+            ))}
+          </Select>
+          {sedes.length === 0 && (
+            <Banner tone="warning">
+              todavía no hay ninguna sede configurada — crea una primero en la sección "sedes".
+            </Banner>
+          )}
 
           <hr className="border-neutral-border dark:border-zinc-800" />
 
@@ -127,10 +158,10 @@ export default function EmpleadoAlta() {
               {DIAS.map((d) => (
                 <button
                   type="button"
-                  key={d.key}
-                  onClick={() => toggleDia(d.key)}
+                  key={d.value}
+                  onClick={() => toggleDia(d.value)}
                   className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    form.dias.includes(d.key)
+                    form.diasSemana.includes(d.value)
                       ? 'border-accent-solid bg-accent-bg text-accent-text dark:bg-accent-darkBg dark:text-accent-darkText'
                       : 'border-neutral-border text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'
                   }`}
@@ -145,28 +176,28 @@ export default function EmpleadoAlta() {
             <Input
               label="hora de entrada"
               type="time"
-              value={form.entrada}
-              onChange={(e) => update('entrada', e.target.value)}
+              value={form.horaEntrada}
+              onChange={(e) => update('horaEntrada', e.target.value)}
               required
             />
             <Input
               label="hora de salida"
               type="time"
-              value={form.salida}
-              onChange={(e) => update('salida', e.target.value)}
+              value={form.horaSalida}
+              onChange={(e) => update('horaSalida', e.target.value)}
               required
             />
             <Input
               label="inicio de almuerzo"
               type="time"
-              value={form.almuerzo_inicio}
-              onChange={(e) => update('almuerzo_inicio', e.target.value)}
+              value={form.horaInicioAlmuerzo}
+              onChange={(e) => update('horaInicioAlmuerzo', e.target.value)}
             />
             <Input
               label="fin de almuerzo"
               type="time"
-              value={form.almuerzo_fin}
-              onChange={(e) => update('almuerzo_fin', e.target.value)}
+              value={form.horaFinAlmuerzo}
+              onChange={(e) => update('horaFinAlmuerzo', e.target.value)}
             />
           </div>
 
@@ -174,8 +205,8 @@ export default function EmpleadoAlta() {
             label="tolerancia (minutos)"
             type="number"
             min="0"
-            value={form.tolerancia_minutos}
-            onChange={(e) => update('tolerancia_minutos', e.target.value)}
+            value={form.toleranciaMinutos}
+            onChange={(e) => update('toleranciaMinutos', e.target.value)}
             hint="minutos de gracia antes de marcar una llegada como tarde"
           />
 

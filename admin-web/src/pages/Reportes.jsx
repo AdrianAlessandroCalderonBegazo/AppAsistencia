@@ -22,8 +22,8 @@ export default function Reportes() {
   const [success, setSuccess] = useState(null)
 
   useEffect(() => {
-    getEmpleados({ activo: true })
-      .then((data) => setEmpleados(Array.isArray(data) ? data : data?.data || []))
+    getEmpleados()
+      .then((data) => setEmpleados((data || []).filter((e) => e.estado === 'activo')))
       .catch(() => {})
   }, [])
 
@@ -33,9 +33,9 @@ export default function Reportes() {
     setSuccess(null)
     try {
       const blob = await getReporteCsvBlob({
-        empleado_id: empleadoId || undefined,
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin,
+        empleadoId: empleadoId || undefined,
+        desde: fechaInicio,
+        hasta: fechaFin,
       })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

@@ -9,12 +9,11 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10)
 }
 
-// deriva un estado semántico simple a partir de la marca de asistencia del día
-function deriveStatus(mark) {
-  if (!mark) return 'ausente'
-  if (mark.estado) return mark.estado
-  if (mark.anomalias?.length || mark.tiene_anomalia) return 'con_anomalias'
-  if (mark.tarde || mark.llego_tarde) return 'tarde'
+// deriva un estado semántico simple a partir de las marcas de hoy de un empleado
+// (puede haber varias marcas en un mismo día: entrada, salida a almuerzo, etc.)
+function deriveStatus(marks) {
+  if (!marks || marks.length === 0) return 'ausente'
+  if (marks.some((m) => m.es_anomalia)) return 'con_anomalias'
   return 'presente'
 }
 
@@ -32,12 +31,12 @@ export default function Dashboard() {
       try {
         const fecha = todayIso()
         const [empData, asisData] = await Promise.all([
-          getEmpleados({ activo: true }),
-          getAsistencias({ fecha_inicio: fecha, fecha_fin: fecha }),
+          getEmpleados(),
+          getAsistencias({ desde: fecha, hasta: fecha }),
         ])
         if (!active) return
-        setEmpleados(Array.isArray(empData) ? empData : empData?.data || [])
-        setAsistenciasHoy(Array.isArray(asisData) ? asisData : asisData?.data || [])
+        setEmpleados((empData || []).filter((e) => e.estado === 'activo'))
+        setAsistenciasHoy(asisData || [])
       } catch (err) {
         if (active) setError(err.message || 'no se pudieron cargar los datos')
       } finally {
@@ -53,34 +52,39 @@ export default function Dashboard() {
   const marksByEmployee = useMemo(() => {
     const map = new Map()
     for (const mark of asistenciasHoy) {
-      const empId = mark.empleado_id ?? mark.empleadoId ?? mark.empleado?.id
-      if (empId != null) map.set(empId, mark)
+      if (mark.anulada) continue
+      const list = map.get(mark.empleado_id) || []
+      list.push(mark)
+      map.set(mark.empleado_id, list)
     }
     return map
   }, [asistenciasHoy])
 
   const summary = useMemo(() => {
-    const counts = { presente: 0, tarde: 0, ausente: 0, con_anomalias: 0 }
+    const counts = { presente: 0, ausente: 0, con_anomalias: 0 }
     for (const emp of empleados) {
       const status = deriveStatus(marksByEmployee.get(emp.id))
-      if (counts[status] !== undefined) counts[status] += 1
+      counts[status] += 1
     }
     return counts
   }, [empleados, marksByEmployee])
 
   const columns = [
-    { key: 'nombre', header: 'empleado', render: (row) => row.nombre || row.nombre_completo || '—' },
+    { key: 'nombre', header: 'empleado' },
     { key: 'dni', header: 'dni' },
-    { key: 'sede', header: 'sede', render: (row) => row.sede_nombre || row.sede?.nombre || '—' },
     {
       key: 'estado',
       header: 'estado hoy',
       render: (row) => <StatusPill status={deriveStatus(marksByEmployee.get(row.id))} />,
     },
     {
-      key: 'hora',
+      key: 'entrada',
       header: 'hora de entrada',
-      render: (row) => marksByEmployee.get(row.id)?.hora_entrada || marksByEmployee.get(row.id)?.entrada || '—',
+      render: (row) => {
+        const entrada = marksByEmployee.get(row.id)?.find((m) => m.tipo_marca === 'entrada')
+        if (!entrada) return '—'
+        return new Date(entrada.hora_marcada).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+      },
     },
   ]
 
@@ -91,9 +95,8 @@ export default function Dashboard() {
         description="estado de asistencia de hoy para todo el personal activo"
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SummaryCard label="presentes" value={summary.presente} tone="success" />
-        <SummaryCard label="tarde" value={summary.tarde} tone="warning" />
         <SummaryCard label="con anomalías" value={summary.con_anomalias} tone="warning" />
         <SummaryCard label="ausentes" value={summary.ausente} tone="danger" />
       </div>
@@ -107,7 +110,7 @@ export default function Dashboard() {
       {loading ? (
         <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">cargando…</Card>
       ) : empleados.length === 0 ? (
-        <EmptyState message="sin resultados por ahora" icon={Users} />
+        <EmptyState message="sin empleados activos por ahora" icon={Users} />
       ) : (
         <DataTable columns={columns} rows={empleados} />
       )}

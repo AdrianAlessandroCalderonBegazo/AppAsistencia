@@ -2,25 +2,21 @@ import { useEffect, useState } from 'react'
 import { Clock, Save } from 'lucide-react'
 import { getEmpleados, getHorarios, createHorario, updateHorario } from '../api/resources.js'
 import { PageHeader, Card, Select, Input, Button, Banner } from '../components/ui.jsx'
-
-const DIAS = [
-  { key: 'lunes', label: 'lunes' },
-  { key: 'martes', label: 'martes' },
-  { key: 'miercoles', label: 'miércoles' },
-  { key: 'jueves', label: 'jueves' },
-  { key: 'viernes', label: 'viernes' },
-  { key: 'sabado', label: 'sábado' },
-  { key: 'domingo', label: 'domingo' },
-]
+import { DIAS, DIAS_LABORALES_DEFAULT } from '../utils/dias.js'
 
 const emptyHorario = {
   id: null,
-  entrada: '08:00',
-  salida: '17:00',
-  almuerzo_inicio: '13:00',
-  almuerzo_fin: '14:00',
-  tolerancia_minutos: 10,
-  dias: [],
+  horaEntrada: '08:00',
+  horaSalida: '17:00',
+  horaInicioAlmuerzo: '13:00',
+  horaFinAlmuerzo: '14:00',
+  toleranciaMinutos: 10,
+  diasSemana: DIAS_LABORALES_DEFAULT,
+}
+
+// "08:00:00" (TIME de Postgres) -> "08:00" (lo que espera <input type="time">)
+function toInputTime(value, fallback) {
+  return value ? value.slice(0, 5) : fallback
 }
 
 export default function Horarios() {
@@ -36,8 +32,8 @@ export default function Horarios() {
     async function loadEmpleados() {
       setLoading(true)
       try {
-        const data = await getEmpleados({ activo: true })
-        const list = Array.isArray(data) ? data : data?.data || []
+        const data = await getEmpleados()
+        const list = (data || []).filter((e) => e.estado === 'activo')
         setEmpleados(list)
         if (list[0]) setEmpleadoId(String(list[0].id))
       } catch (err) {
@@ -56,19 +52,18 @@ export default function Horarios() {
       setError(null)
       setSuccess(null)
       try {
-        const data = await getHorarios(empleadoId)
-        const list = Array.isArray(data) ? data : data?.data || (data ? [data] : [])
-        const existing = list[0]
+        const list = await getHorarios(empleadoId)
+        const existing = (list || []).find((h) => h.activo) || list?.[0]
         if (!active) return
         if (existing) {
           setHorario({
             id: existing.id,
-            entrada: existing.entrada || existing.hora_entrada || '08:00',
-            salida: existing.salida || existing.hora_salida || '17:00',
-            almuerzo_inicio: existing.almuerzo_inicio || '13:00',
-            almuerzo_fin: existing.almuerzo_fin || '14:00',
-            tolerancia_minutos: existing.tolerancia_minutos ?? 10,
-            dias: existing.dias || [],
+            horaEntrada: toInputTime(existing.hora_entrada, '08:00'),
+            horaSalida: toInputTime(existing.hora_salida, '17:00'),
+            horaInicioAlmuerzo: toInputTime(existing.hora_inicio_almuerzo, '13:00'),
+            horaFinAlmuerzo: toInputTime(existing.hora_fin_almuerzo, '14:00'),
+            toleranciaMinutos: existing.tolerancia_minutos ?? 10,
+            diasSemana: existing.dias_semana || [],
           })
         } else {
           setHorario(emptyHorario)
@@ -90,7 +85,7 @@ export default function Horarios() {
   function toggleDia(dia) {
     setHorario((h) => ({
       ...h,
-      dias: h.dias.includes(dia) ? h.dias.filter((d) => d !== dia) : [...h.dias, dia],
+      diasSemana: h.diasSemana.includes(dia) ? h.diasSemana.filter((d) => d !== dia) : [...h.diasSemana, dia],
     }))
   }
 
@@ -100,13 +95,13 @@ export default function Horarios() {
     setSuccess(null)
     try {
       const payload = {
-        empleado_id: empleadoId,
-        entrada: horario.entrada,
-        salida: horario.salida,
-        almuerzo_inicio: horario.almuerzo_inicio,
-        almuerzo_fin: horario.almuerzo_fin,
-        tolerancia_minutos: Number(horario.tolerancia_minutos) || 0,
-        dias: horario.dias,
+        empleadoId: Number(empleadoId),
+        horaEntrada: horario.horaEntrada,
+        horaSalida: horario.horaSalida,
+        horaInicioAlmuerzo: horario.horaInicioAlmuerzo || null,
+        horaFinAlmuerzo: horario.horaFinAlmuerzo || null,
+        toleranciaMinutos: Number(horario.toleranciaMinutos) || 0,
+        diasSemana: horario.diasSemana,
       }
       if (horario.id) {
         await updateHorario(horario.id, payload)
@@ -164,10 +159,10 @@ export default function Horarios() {
             {DIAS.map((d) => (
               <button
                 type="button"
-                key={d.key}
-                onClick={() => toggleDia(d.key)}
+                key={d.value}
+                onClick={() => toggleDia(d.value)}
                 className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  horario.dias.includes(d.key)
+                  horario.diasSemana.includes(d.value)
                     ? 'border-accent-solid bg-accent-bg text-accent-text dark:bg-accent-darkBg dark:text-accent-darkText'
                     : 'border-neutral-border text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'
                 }`}
@@ -182,26 +177,26 @@ export default function Horarios() {
           <Input
             label="hora de entrada"
             type="time"
-            value={horario.entrada}
-            onChange={(e) => update('entrada', e.target.value)}
+            value={horario.horaEntrada}
+            onChange={(e) => update('horaEntrada', e.target.value)}
           />
           <Input
             label="hora de salida"
             type="time"
-            value={horario.salida}
-            onChange={(e) => update('salida', e.target.value)}
+            value={horario.horaSalida}
+            onChange={(e) => update('horaSalida', e.target.value)}
           />
           <Input
             label="inicio de almuerzo"
             type="time"
-            value={horario.almuerzo_inicio}
-            onChange={(e) => update('almuerzo_inicio', e.target.value)}
+            value={horario.horaInicioAlmuerzo}
+            onChange={(e) => update('horaInicioAlmuerzo', e.target.value)}
           />
           <Input
             label="fin de almuerzo"
             type="time"
-            value={horario.almuerzo_fin}
-            onChange={(e) => update('almuerzo_fin', e.target.value)}
+            value={horario.horaFinAlmuerzo}
+            onChange={(e) => update('horaFinAlmuerzo', e.target.value)}
           />
         </div>
 
@@ -210,8 +205,8 @@ export default function Horarios() {
             label="tolerancia (minutos)"
             type="number"
             min="0"
-            value={horario.tolerancia_minutos}
-            onChange={(e) => update('tolerancia_minutos', e.target.value)}
+            value={horario.toleranciaMinutos}
+            onChange={(e) => update('toleranciaMinutos', e.target.value)}
             hint="minutos de gracia antes de marcar una llegada como tarde"
           />
         </div>
