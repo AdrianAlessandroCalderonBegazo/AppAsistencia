@@ -1,4 +1,4 @@
-# FrontICR Backend
+# Asistencia — Backend API
 
 API REST en Node.js + Express para el sistema de control de asistencia con geolocalización
 (piloto de ~30 usuarios). Usa `pg` directo (sin ORM) contra el esquema en `database/schema.sql`.
@@ -31,8 +31,8 @@ El hash se genera con `node -e "console.log(require('bcrypt').hashSync('tu-clave
 
 ## Regla de contraseña genérica
 
-Al crear un empleado o resetear su contraseña, se asigna: **primeros 4 dígitos del DNI + "Icr"**
-(ej. DNI `12345678` → `1234Icr`). Ver `src/utils/genericPassword.js`. El login con esa contraseña
+Al crear un empleado o resetear su contraseña, se asigna: **primeros 4 dígitos del DNI + "Asis"**
+(ej. DNI `12345678` → `1234Asis`). Ver `src/utils/genericPassword.js`. El login con esa contraseña
 funciona, pero `debe_cambiar_password` queda en `true` y el middleware `requirePasswordChanged`
 bloquea todas las rutas (salvo `/auth/*`) hasta que el usuario cambie su clave.
 

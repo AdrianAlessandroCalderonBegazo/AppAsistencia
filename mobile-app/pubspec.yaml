@@ -1,5 +1,5 @@
-name: fronticr_empleado
-description: App móvil para empleados — marcación de asistencia con geolocalización (ICR).
+name: asistencia_empleado
+description: App móvil para empleados — marcación de asistencia con geolocalización.
 publish_to: "none"
 version: 1.0.0+1
 

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: fronticr-backend
+    name: asistencia-backend
     runtime: node
     plan: free
     rootDir: backend
@@ -20,7 +20,7 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 30d
       - key: GENERIC_PASSWORD_RULE
-        value: first4digits+Icr
+        value: first4digits+Asis
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: FIREBASE_CLIENT_EMAIL

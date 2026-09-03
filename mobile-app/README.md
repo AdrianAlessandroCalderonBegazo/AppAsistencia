@@ -1,4 +1,4 @@
-# FrontICR — app móvil de empleados
+# Asistencia — App móvil de empleados
 
 App Flutter (Android + iOS, un solo código) para el lado **empleado** del
 sistema de control de asistencia con geolocalización. El panel de

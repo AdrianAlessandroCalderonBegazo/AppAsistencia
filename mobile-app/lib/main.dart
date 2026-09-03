@@ -22,11 +22,11 @@ Future<void> main() async {
     // no-op: push quedará deshabilitado hasta que se configure Firebase.
   }
 
-  runApp(const FrontIcrApp());
+  runApp(const AsistenciaApp());
 }
 
-class FrontIcrApp extends StatelessWidget {
-  const FrontIcrApp({super.key});
+class AsistenciaApp extends StatelessWidget {
+  const AsistenciaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
