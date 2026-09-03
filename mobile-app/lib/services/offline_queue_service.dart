@@ -23,7 +23,7 @@ class OfflineQueueService {
     if (_db != null) return _db!;
     final dbPath = await getDatabasesPath();
     _db = await openDatabase(
-      p.join(dbPath, 'fronticr_offline.db'),
+      p.join(dbPath, 'asistencia_offline.db'),
       version: 1,
       onCreate: (db, version) => db.execute('''
         CREATE TABLE $_table (

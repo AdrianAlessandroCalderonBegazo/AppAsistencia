@@ -1,5 +1,5 @@
 {
-  "name": "fronticr-backend",
+  "name": "asistencia-backend",
   "version": "1.0.0",
   "description": "API de control de asistencia con geolocalización (piloto ~30 usuarios)",
   "main": "src/server.js",
