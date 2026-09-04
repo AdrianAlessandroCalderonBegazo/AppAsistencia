@@ -5,6 +5,7 @@ import { PageHeader, Card, Select, Input, Button, Textarea, Banner, EmptyState }
 import StatusPill from '../components/StatusPill.jsx'
 import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
+import { todayIso, daysAgoIso } from '../utils/date.js'
 
 const TIPOS_MARCA = [
   { value: 'entrada', label: 'Entrada' },
@@ -15,15 +16,6 @@ const TIPOS_MARCA = [
 
 function tipoLabel(tipo) {
   return TIPOS_MARCA.find((t) => t.value === tipo)?.label || tipo
-}
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10)
-}
-function daysAgoIso(n) {
-  const d = new Date()
-  d.setDate(d.getDate() - n)
-  return d.toISOString().slice(0, 10)
 }
 
 // "2024-05-01T13:00:00.000Z" -> valor válido para <input type="datetime-local">

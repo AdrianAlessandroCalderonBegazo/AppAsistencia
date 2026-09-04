@@ -87,11 +87,14 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
 }
 
 router.post('/', async (req, res) => {
-  const { tipoMarca, horaMarcada, lat, lng } = req.body;
+  const { tipoMarca, horaMarcada, lat, lng, fecha: fechaCliente } = req.body;
   if (tipoMarca === undefined || horaMarcada === undefined || lat === undefined || lng === undefined) {
     return res.status(400).json({ error: 'tipoMarca, horaMarcada, lat y lng son requeridos.' });
   }
-  const fecha = new Date(horaMarcada).toISOString().slice(0, 10);
+  // Se prefiere la fecha calendario local que manda el cliente (ver toSubmitJson en la app):
+  // derivarla de horaMarcada en UTC puede caer en el día siguiente/anterior según la zona
+  // horaria del empleado, y la marca dejaría de aparecer al filtrar por "hoy".
+  const fecha = fechaCliente || new Date(horaMarcada).toISOString().slice(0, 10);
 
   try {
     const marca = await insertMark({
@@ -114,12 +117,12 @@ router.post('/sync', async (req, res) => {
 
   const resultados = [];
   for (const marca of marcas) {
-    const { tipoMarca, horaMarcada, lat, lng } = marca;
+    const { tipoMarca, horaMarcada, lat, lng, fecha: fechaCliente } = marca;
     if (tipoMarca === undefined || horaMarcada === undefined || lat === undefined || lng === undefined) {
       resultados.push({ error: 'Marca incompleta.', marca });
       continue;
     }
-    const fecha = new Date(horaMarcada).toISOString().slice(0, 10);
+    const fecha = fechaCliente || new Date(horaMarcada).toISOString().slice(0, 10);
     try {
       const inserted = await insertMark({
         empleadoId: req.user.id, fecha, tipoMarca, horaMarcada, lat, lng, origen: 'offline_sync',

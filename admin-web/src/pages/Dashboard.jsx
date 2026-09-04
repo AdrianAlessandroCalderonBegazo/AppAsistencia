@@ -4,10 +4,7 @@ import { getEmpleados, getAsistencias } from '../api/resources.js'
 import { PageHeader, Card, EmptyState } from '../components/ui.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import DataTable from '../components/DataTable.jsx'
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayIso } from '../utils/date.js'
 
 // deriva un estado semántico simple a partir de las marcas de hoy de un empleado
 // (puede haber varias marcas en un mismo día: entrada, salida a almuerzo, etc.)

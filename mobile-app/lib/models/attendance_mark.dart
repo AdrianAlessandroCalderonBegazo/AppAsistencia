@@ -98,10 +98,23 @@ class AttendanceMark {
   Map<String, dynamic> toSubmitJson() => {
         'tipoMarca': tipoMarca.apiValue,
         'horaMarcada': horaMarcada.toUtc().toIso8601String(),
+        // Se manda la fecha calendario local explícita (no se deja que el backend la derive
+        // de horaMarcada en UTC): si el empleado marca de noche en una zona horaria detrás de
+        // UTC, la fecha en UTC ya sería "mañana" y la marca desaparecería de "hoy"/"historial"
+        // al filtrar por la fecha local del dispositivo.
+        'fecha': _localDateString(horaMarcada),
         'lat': latitud,
         'lng': longitud,
         // el backend todavía no persiste ni usa esta señal; se envía igual para
         // no perderla el día que se agregue como capa extra de defensa server-side.
         'mockLocation': mockLocation,
       };
+}
+
+String _localDateString(DateTime dt) {
+  final local = dt.isUtc ? dt.toLocal() : dt;
+  final y = local.year.toString().padLeft(4, '0');
+  final m = local.month.toString().padLeft(2, '0');
+  final d = local.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
 }

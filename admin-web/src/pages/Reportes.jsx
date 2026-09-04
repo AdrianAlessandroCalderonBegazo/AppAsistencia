@@ -2,15 +2,7 @@ import { useEffect, useState } from 'react'
 import { FileDown, Download } from 'lucide-react'
 import { getEmpleados, getReporteCsvBlob } from '../api/resources.js'
 import { PageHeader, Card, Select, Input, Button, Banner } from '../components/ui.jsx'
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10)
-}
-function daysAgoIso(n) {
-  const d = new Date()
-  d.setDate(d.getDate() - n)
-  return d.toISOString().slice(0, 10)
-}
+import { todayIso, daysAgoIso } from '../utils/date.js'
 
 export default function Reportes() {
   const [empleados, setEmpleados] = useState([])
