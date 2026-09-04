@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 
 import '../models/attendance_mark.dart';
 import 'api_client.dart';
@@ -50,9 +51,13 @@ class AttendanceService {
     try {
       final response = await _client.dio.post('/attendance', data: mark.toSubmitJson());
       return AttendanceMark.fromJson(response.data as Map<String, dynamic>);
-    } on Object {
-      // la petición falló aunque había conectividad reportada (red inestable, servidor caído):
-      // igual la encolamos para no perder la marca del empleado.
+    } on DioException catch (e) {
+      // Si el servidor respondió (aunque sea rechazando la marca, ej. "entrada fuera del
+      // área"), eso es una decisión real, no un problema de red: hay que mostrársela al
+      // empleado, no esconderla en la cola offline como si fuera a reintentarse sola.
+      if (e.response != null) rethrow;
+      // Sin respuesta del servidor (sin conexión, timeout, servidor caído): ahí sí se
+      // encola para no perder la marca.
       await _queue.enqueue(mark);
       return _asPending(mark);
     }

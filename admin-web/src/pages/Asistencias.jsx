@@ -133,10 +133,17 @@ export default function Asistencias() {
       key: 'badges',
       header: 'Detalles',
       render: (row) => (
-        <div className="flex flex-wrap gap-1">
-          {badgesFor(row).map((b) => (
-            <StatusPill key={b} status={b} />
-          ))}
+        <div className="flex max-w-[240px] flex-col gap-1">
+          <div className="flex flex-wrap gap-1">
+            {badgesFor(row).map((b) => (
+              <StatusPill key={b} status={b} />
+            ))}
+          </div>
+          {row.es_anomalia && row.motivo_anomalia && (
+            <span className="whitespace-normal text-xs text-zinc-500 dark:text-zinc-400">
+              {row.motivo_anomalia}
+            </span>
+          )}
         </div>
       ),
     },

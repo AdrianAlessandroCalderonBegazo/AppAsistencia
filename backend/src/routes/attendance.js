@@ -47,7 +47,27 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
   if (!site) throw Object.assign(new Error('El empleado no tiene una sede asignada.'), { status: 400 });
 
   const { distanceMeters, withinArea } = isWithinSite(lat, lng, site);
-  const { esAnomalia, motivo } = await detectAnomaly(empleadoId, fecha, tipoMarca);
+
+  // La entrada es la única marca que exige estar físicamente en la sede: sin ella no hay
+  // certeza de que la jornada empezó en el lugar de trabajo, así que se rechaza directamente
+  // (nunca se confía en nada enviado por el cliente, la decisión es siempre del servidor).
+  // Almuerzo/regreso de almuerzo no lo exigen. La salida se permite fuera del área, pero
+  // queda marcada como anomalía para que el admin la revise (ver más abajo).
+  if (tipoMarca === 'entrada' && !withinArea) {
+    throw Object.assign(
+      new Error('No se puede marcar la entrada fuera del área permitida de la sede.'),
+      { status: 403 }
+    );
+  }
+
+  const orderAnomaly = await detectAnomaly(empleadoId, fecha, tipoMarca);
+  const motivos = [];
+  if (orderAnomaly.esAnomalia) motivos.push(orderAnomaly.motivo);
+  if (tipoMarca === 'salida' && !withinArea) {
+    motivos.push('Salida marcada fuera del área permitida de la sede.');
+  }
+  const esAnomalia = motivos.length > 0;
+  const motivo = motivos.length > 0 ? motivos.join(' ') : null;
 
   const editableHasta = new Date(new Date(horaMarcada).getTime() + SELF_CORRECTION_WINDOW_MS);
   const sincronizacionTardia = origen === 'offline_sync' && Date.now() - new Date(horaMarcada).getTime() > LATE_SYNC_THRESHOLD_MS;
