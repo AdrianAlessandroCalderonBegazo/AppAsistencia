@@ -1,11 +1,11 @@
 {
-    "name": "control de asistencia",
-    "short_name": "asistencia",
+    "name": "Control de asistencia",
+    "short_name": "Asistencia",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#2563EB",
-    "description": "marca tu asistencia con geolocalización, consulta tu horario e historial.",
+    "description": "Marca tu asistencia con geolocalización, consulta tu horario e historial.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

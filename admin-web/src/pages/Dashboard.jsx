@@ -38,7 +38,7 @@ export default function Dashboard() {
         setEmpleados((empData || []).filter((e) => e.estado === 'activo'))
         setAsistenciasHoy(asisData || [])
       } catch (err) {
-        if (active) setError(err.message || 'no se pudieron cargar los datos')
+        if (active) setError(err.message || 'No se pudieron cargar los datos')
       } finally {
         if (active) setLoading(false)
       }
@@ -70,16 +70,16 @@ export default function Dashboard() {
   }, [empleados, marksByEmployee])
 
   const columns = [
-    { key: 'nombre', header: 'empleado' },
-    { key: 'dni', header: 'dni' },
+    { key: 'nombre', header: 'Empleado' },
+    { key: 'dni', header: 'DNI' },
     {
       key: 'estado',
-      header: 'estado hoy',
+      header: 'Estado hoy',
       render: (row) => <StatusPill status={deriveStatus(marksByEmployee.get(row.id))} />,
     },
     {
       key: 'entrada',
-      header: 'hora de entrada',
+      header: 'Hora de entrada',
       render: (row) => {
         const entrada = marksByEmployee.get(row.id)?.find((m) => m.tipo_marca === 'entrada')
         if (!entrada) return '—'
@@ -91,14 +91,14 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader
-        title="dashboard"
-        description="estado de asistencia de hoy para todo el personal activo"
+        title="Dashboard"
+        description="Estado de asistencia de hoy para todo el personal activo"
       />
 
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <SummaryCard label="presentes" value={summary.presente} tone="success" />
-        <SummaryCard label="con anomalías" value={summary.con_anomalias} tone="warning" />
-        <SummaryCard label="ausentes" value={summary.ausente} tone="danger" />
+        <SummaryCard label="Presentes" value={summary.presente} tone="success" />
+        <SummaryCard label="Con anomalías" value={summary.con_anomalias} tone="warning" />
+        <SummaryCard label="Ausentes" value={summary.ausente} tone="danger" />
       </div>
 
       {error && (
@@ -108,9 +108,9 @@ export default function Dashboard() {
       )}
 
       {loading ? (
-        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">cargando…</Card>
+        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">Cargando…</Card>
       ) : empleados.length === 0 ? (
-        <EmptyState message="sin empleados activos por ahora" icon={Users} />
+        <EmptyState message="Sin empleados activos por ahora" icon={Users} />
       ) : (
         <DataTable columns={columns} rows={empleados} />
       )}

@@ -20,11 +20,11 @@ export default function ChangePassword() {
     e.preventDefault()
     setError(null)
     if (nueva !== confirmar) {
-      setError('las contraseñas nuevas no coinciden')
+      setError('Las contraseñas nuevas no coinciden')
       return
     }
     if (nueva.length < 6) {
-      setError('la contraseña nueva debe tener al menos 6 caracteres')
+      setError('La contraseña nueva debe tener al menos 6 caracteres')
       return
     }
     setLoading(true)
@@ -32,7 +32,7 @@ export default function ChangePassword() {
       await changePassword(actual, nueva)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err.message || 'no se pudo cambiar la contraseña')
+      setError(err.message || 'No se pudo cambiar la contraseña')
     } finally {
       setLoading(false)
     }
@@ -45,9 +45,9 @@ export default function ChangePassword() {
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-warning-bg text-warning-text dark:bg-warning-darkBg dark:text-warning-darkText">
             <KeyRound size={22} />
           </div>
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">cambia tu contraseña</h1>
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Cambia tu contraseña</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            por seguridad necesitas definir una contraseña nueva antes de continuar
+            Por seguridad necesitas definir una contraseña nueva antes de continuar
           </p>
         </div>
 
@@ -59,28 +59,28 @@ export default function ChangePassword() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            label="contraseña actual"
+            label="Contraseña actual"
             type="password"
             value={actual}
             onChange={(e) => setActual(e.target.value)}
             required
           />
           <Input
-            label="contraseña nueva"
+            label="Contraseña nueva"
             type="password"
             value={nueva}
             onChange={(e) => setNueva(e.target.value)}
             required
           />
           <Input
-            label="confirmar contraseña nueva"
+            label="Confirmar contraseña nueva"
             type="password"
             value={confirmar}
             onChange={(e) => setConfirmar(e.target.value)}
             required
           />
           <Button type="submit" disabled={loading} className="mt-2 w-full">
-            {loading ? 'guardando…' : 'guardar contraseña'}
+            {loading ? 'Guardando…' : 'Guardar contraseña'}
           </Button>
         </form>
       </div>

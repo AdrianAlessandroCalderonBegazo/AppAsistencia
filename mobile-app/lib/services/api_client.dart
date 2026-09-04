@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'location_service.dart';
+
 /// Base URL configurable en build/run time: flutter run --dart-define=API_BASE_URL=https://...
 const _defaultBaseUrl = 'http://localhost:3000/api';
 const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: _defaultBaseUrl);
@@ -48,6 +50,7 @@ class ApiClient {
 
 /// Traduce errores de Dio a un mensaje en español apto para mostrar al usuario.
 String friendlyErrorMessage(Object error) {
+  if (error is LocationException) return error.message;
   if (error is DioException) {
     final data = error.response?.data;
     if (data is Map && data['error'] is String) return data['error'] as String;
@@ -55,12 +58,12 @@ String friendlyErrorMessage(Object error) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.sendTimeout:
-        return 'la conexión tardó demasiado, intenta de nuevo';
+        return 'La conexión tardó demasiado, intenta de nuevo';
       case DioExceptionType.connectionError:
-        return 'no hay conexión con el servidor';
+        return 'No hay conexión con el servidor';
       default:
-        return 'ocurrió un error inesperado, intenta de nuevo';
+        return 'Ocurrió un error inesperado, intenta de nuevo';
     }
   }
-  return 'ocurrió un error inesperado, intenta de nuevo';
+  return 'Ocurrió un error inesperado, intenta de nuevo';
 }

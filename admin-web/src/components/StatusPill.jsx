@@ -8,21 +8,21 @@ const TONES = {
 
 // mapeo centralizado de estados de negocio -> tono semántico + etiqueta en español
 export const STATUS_MAP = {
-  presente: { tone: 'success', label: 'presente' },
-  tarde: { tone: 'warning', label: 'tarde' },
-  ausente: { tone: 'danger', label: 'ausente' },
-  con_anomalias: { tone: 'warning', label: 'con anomalías' },
-  anomalia: { tone: 'warning', label: 'anomalía' },
-  dentro_area: { tone: 'success', label: 'dentro de área' },
-  fuera_area: { tone: 'danger', label: 'fuera de área' },
-  pendiente: { tone: 'warning', label: 'pendiente' },
-  aprobada: { tone: 'success', label: 'aprobada' },
-  rechazada: { tone: 'danger', label: 'rechazada' },
-  activo: { tone: 'success', label: 'activo' },
-  inactivo: { tone: 'neutral', label: 'inactivo' },
-  sincronizacion_tardia: { tone: 'accent', label: 'sincronización tardía' },
-  creada_por_solicitud: { tone: 'accent', label: 'creada por solicitud aprobada' },
-  editada: { tone: 'neutral', label: 'editada por admin' },
+  presente: { tone: 'success', label: 'Presente' },
+  tarde: { tone: 'warning', label: 'Tarde' },
+  ausente: { tone: 'danger', label: 'Ausente' },
+  con_anomalias: { tone: 'warning', label: 'Con anomalías' },
+  anomalia: { tone: 'warning', label: 'Anomalía' },
+  dentro_area: { tone: 'success', label: 'Dentro de área' },
+  fuera_area: { tone: 'danger', label: 'Fuera de área' },
+  pendiente: { tone: 'warning', label: 'Pendiente' },
+  aprobada: { tone: 'success', label: 'Aprobada' },
+  rechazada: { tone: 'danger', label: 'Rechazada' },
+  activo: { tone: 'success', label: 'Activo' },
+  inactivo: { tone: 'neutral', label: 'Inactivo' },
+  sincronizacion_tardia: { tone: 'accent', label: 'Sincronización tardía' },
+  creada_por_solicitud: { tone: 'accent', label: 'Creada por solicitud aprobada' },
+  editada: { tone: 'neutral', label: 'Editada por admin' },
 }
 
 export default function StatusPill({ status, tone, label, className = '' }) {

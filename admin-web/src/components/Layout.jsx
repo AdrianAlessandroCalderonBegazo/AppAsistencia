@@ -16,14 +16,14 @@ import { useAuth } from '../context/AuthContext.jsx'
 import ThemeToggle from './ThemeToggle.jsx'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'dashboard', icon: LayoutDashboard, end: true },
-  { to: '/empleados/alta', label: 'alta de empleado', icon: UserPlus },
-  { to: '/empleados/baja', label: 'baja de empleado', icon: UserMinus },
-  { to: '/horarios', label: 'horarios', icon: Clock },
-  { to: '/asistencias', label: 'asistencias', icon: History },
-  { to: '/solicitudes', label: 'solicitudes de corrección', icon: MessageSquare },
-  { to: '/reportes', label: 'reportes', icon: FileDown },
-  { to: '/sedes', label: 'sedes', icon: Building2 },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/empleados/alta', label: 'Alta de empleado', icon: UserPlus },
+  { to: '/empleados/baja', label: 'Gestión de empleados', icon: UserMinus },
+  { to: '/horarios', label: 'Horarios', icon: Clock },
+  { to: '/asistencias', label: 'Asistencias', icon: History },
+  { to: '/solicitudes', label: 'Solicitudes de corrección', icon: MessageSquare },
+  { to: '/reportes', label: 'Reportes', icon: FileDown },
+  { to: '/sedes', label: 'Sedes', icon: Building2 },
 ]
 
 export default function Layout() {
@@ -42,7 +42,7 @@ export default function Layout() {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-solid text-sm font-semibold text-white">
               IC
             </div>
-            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">control de asistencia</span>
+            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Control de Asistencia</span>
           </div>
 
           <nav className="flex flex-col gap-1 p-3">
@@ -68,14 +68,14 @@ export default function Layout() {
 
           <div className="absolute bottom-0 left-0 right-0 border-t border-neutral-border p-3 dark:border-zinc-800">
             <div className="mb-2 px-2 text-xs text-zinc-400">
-              {user?.nombre || user?.dni || 'administrador'}
+              {user?.nombre || user?.dni || 'Administrador'}
             </div>
             <button
               onClick={logout}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-danger-solid hover:bg-danger-bg dark:hover:bg-danger-darkBg"
             >
               <LogOut size={18} />
-              cerrar sesión
+              Cerrar sesión
             </button>
           </div>
         </aside>
@@ -93,7 +93,7 @@ export default function Layout() {
             <button
               className="rounded-xl border border-neutral-border p-2 text-zinc-500 dark:border-zinc-800 lg:hidden"
               onClick={() => setOpen(true)}
-              aria-label="abrir menú"
+              aria-label="Abrir menú"
             >
               <Menu size={18} />
             </button>

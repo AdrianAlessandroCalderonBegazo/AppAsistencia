@@ -38,11 +38,11 @@ class _RequestsListScreenState extends State<RequestsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('solicitudes')),
+      appBar: AppBar(title: const Text('Solicitudes')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openNewRequest,
         icon: const Icon(Icons.add),
-        label: const Text('nueva solicitud'),
+        label: const Text('Nueva solicitud'),
       ),
       body: RefreshIndicator(
         onRefresh: () async => setState(_load),
@@ -61,7 +61,7 @@ class _RequestsListScreenState extends State<RequestsListScreen> {
                 padding: const EdgeInsets.all(24),
                 children: const [
                   SizedBox(height: 80),
-                  Center(child: Text('todavía no has enviado solicitudes')),
+                  Center(child: Text('Todavía no has enviado solicitudes')),
                 ],
               );
             }
@@ -113,7 +113,7 @@ class _RequestTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'respuesta del admin: ${request.respuestaAdmin}',
+                  'Respuesta del admin: ${request.respuestaAdmin}',
                   style: TextStyle(color: colors.accentText, fontSize: 13),
                 ),
               ),

@@ -25,7 +25,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('mi horario')),
+      appBar: AppBar(title: const Text('Mi horario')),
       body: FutureBuilder<Schedule?>(
         future: _future,
         builder: (context, snapshot) {
@@ -37,29 +37,29 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           }
           final schedule = snapshot.data;
           if (schedule == null) {
-            return const Center(child: Text('todavía no tienes un horario asignado'));
+            return const Center(child: Text('Todavía no tienes un horario asignado'));
           }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _ScheduleRow(icon: Icons.event_outlined, label: 'días', value: schedule.nombresDias.join(', ')),
-              _ScheduleRow(icon: Icons.login_outlined, label: 'hora de entrada', value: schedule.horaEntrada),
-              _ScheduleRow(icon: Icons.logout_outlined, label: 'hora de salida', value: schedule.horaSalida),
+              _ScheduleRow(icon: Icons.event_outlined, label: 'Días', value: schedule.nombresDias.join(', ')),
+              _ScheduleRow(icon: Icons.login_outlined, label: 'Hora de entrada', value: schedule.horaEntrada),
+              _ScheduleRow(icon: Icons.logout_outlined, label: 'Hora de salida', value: schedule.horaSalida),
               if (schedule.horaInicioAlmuerzo != null)
                 _ScheduleRow(
                   icon: Icons.lunch_dining_outlined,
-                  label: 'inicio de almuerzo',
+                  label: 'Inicio de almuerzo',
                   value: schedule.horaInicioAlmuerzo!,
                 ),
               if (schedule.horaFinAlmuerzo != null)
                 _ScheduleRow(
                   icon: Icons.restaurant_outlined,
-                  label: 'fin de almuerzo',
+                  label: 'Fin de almuerzo',
                   value: schedule.horaFinAlmuerzo!,
                 ),
               _ScheduleRow(
                 icon: Icons.timer_outlined,
-                label: 'tolerancia',
+                label: 'Tolerancia',
                 value: '${schedule.toleranciaMinutos} minutos',
               ),
             ],

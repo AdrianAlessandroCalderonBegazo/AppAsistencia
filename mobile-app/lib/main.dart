@@ -31,7 +31,7 @@ class AsistenciaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'control de asistencia',
+      title: 'Control de asistencia',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

@@ -80,7 +80,7 @@ export function PageHeader({ title, description, actions }) {
   )
 }
 
-export function EmptyState({ message = 'sin resultados por ahora', icon: Icon }) {
+export function EmptyState({ message = 'Sin resultados por ahora', icon: Icon }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-neutral-border dark:border-zinc-800 py-16 text-center">
       {Icon && <Icon size={28} className="text-zinc-300 dark:text-zinc-600" />}

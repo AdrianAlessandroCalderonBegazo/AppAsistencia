@@ -60,7 +60,7 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('nueva solicitud')),
+      appBar: AppBar(title: const Text('Nueva solicitud')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -70,13 +70,13 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'cuéntanos qué marca necesitas corregir y un admin la revisará',
+                  'Cuéntanos qué marca necesitas corregir y un admin la revisará',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<MarkType>(
                   value: _tipo,
-                  decoration: const InputDecoration(labelText: 'tipo de marca'),
+                  decoration: const InputDecoration(labelText: 'Tipo de marca'),
                   items: MarkType.values
                       .map((t) => DropdownMenuItem(value: t, child: Text(t.label)))
                       .toList(),
@@ -86,7 +86,7 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
                 InkWell(
                   onTap: _pickDate,
                   child: InputDecorator(
-                    decoration: const InputDecoration(labelText: 'fecha'),
+                    decoration: const InputDecoration(labelText: 'Fecha'),
                     child: Text(DateFormat('d MMM yyyy').format(_fecha)),
                   ),
                 ),
@@ -95,11 +95,11 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
                   controller: _messageController,
                   maxLines: 4,
                   decoration: const InputDecoration(
-                    labelText: 'mensaje',
+                    labelText: 'Mensaje',
                     alignLabelWithHint: true,
-                    hintText: 'explica brevemente qué pasó',
+                    hintText: 'Explica brevemente qué pasó',
                   ),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'cuéntanos qué pasó' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Cuéntanos qué pasó' : null,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -110,7 +110,7 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('enviar solicitud'),
+                      : const Text('Enviar solicitud'),
                 ),
               ],
             ),

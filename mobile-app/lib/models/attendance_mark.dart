@@ -13,10 +13,10 @@ enum MarkType {
       };
 
   String get label => switch (this) {
-        MarkType.entrada => 'entrada',
-        MarkType.salidaAlmuerzo => 'salida a almuerzo',
-        MarkType.regresoAlmuerzo => 'regreso de almuerzo',
-        MarkType.salida => 'salida final',
+        MarkType.entrada => 'Entrada',
+        MarkType.salidaAlmuerzo => 'Salida a almuerzo',
+        MarkType.regresoAlmuerzo => 'Regreso de almuerzo',
+        MarkType.salida => 'Salida final',
       };
 
   static MarkType fromApiValue(String value) => MarkType.values.firstWhere(

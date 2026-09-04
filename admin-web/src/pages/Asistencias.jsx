@@ -7,10 +7,10 @@ import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
 
 const TIPOS_MARCA = [
-  { value: 'entrada', label: 'entrada' },
-  { value: 'salida_almuerzo', label: 'salida a almuerzo' },
-  { value: 'regreso_almuerzo', label: 'regreso de almuerzo' },
-  { value: 'salida', label: 'salida final' },
+  { value: 'entrada', label: 'Entrada' },
+  { value: 'salida_almuerzo', label: 'Salida a almuerzo' },
+  { value: 'regreso_almuerzo', label: 'Regreso de almuerzo' },
+  { value: 'salida', label: 'Salida final' },
 ]
 
 function tipoLabel(tipo) {
@@ -64,7 +64,7 @@ export default function Asistencias() {
       const data = await getAsistencias(filters)
       setRows(data || [])
     } catch (err) {
-      setError(err.message || 'no se pudieron cargar las asistencias')
+      setError(err.message || 'No se pudieron cargar las asistencias')
     } finally {
       setLoading(false)
     }
@@ -85,7 +85,7 @@ export default function Asistencias() {
 
   async function handleSave() {
     if (!motivo.trim()) {
-      setSaveError('el motivo es obligatorio para corregir una marca')
+      setSaveError('El motivo es obligatorio para corregir una marca')
       return
     }
     setSaving(true)
@@ -99,7 +99,7 @@ export default function Asistencias() {
       setEditing(null)
       await load()
     } catch (err) {
-      setSaveError(err.message || 'no se pudo guardar la corrección')
+      setSaveError(err.message || 'No se pudo guardar la corrección')
     } finally {
       setSaving(false)
     }
@@ -116,22 +116,22 @@ export default function Asistencias() {
   }
 
   const columns = [
-    { key: 'empleado', header: 'empleado', render: (row) => row.empleado_nombre || '—' },
-    { key: 'fecha', header: 'fecha' },
-    { key: 'tipo_marca', header: 'tipo de marca', render: (row) => tipoLabel(row.tipo_marca) },
+    { key: 'empleado', header: 'Empleado', render: (row) => row.empleado_nombre || '—' },
+    { key: 'fecha', header: 'Fecha' },
+    { key: 'tipo_marca', header: 'Tipo de marca', render: (row) => tipoLabel(row.tipo_marca) },
     {
       key: 'hora',
-      header: 'hora',
+      header: 'Hora',
       render: (row) => new Date(row.hora_marcada).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }),
     },
     {
       key: 'area',
-      header: 'ubicación',
+      header: 'Ubicación',
       render: (row) => <StatusPill status={row.dentro_area ? 'dentro_area' : 'fuera_area'} />,
     },
     {
       key: 'badges',
-      header: 'detalles',
+      header: 'Detalles',
       render: (row) => (
         <div className="flex flex-wrap gap-1">
           {badgesFor(row).map((b) => (
@@ -146,7 +146,7 @@ export default function Asistencias() {
       render: (row) => (
         <Button variant="secondary" onClick={() => openEdit(row)} className="px-3 py-1.5 text-xs">
           <Pencil size={14} />
-          corregir
+          Corregir
         </Button>
       ),
     },
@@ -154,7 +154,7 @@ export default function Asistencias() {
 
   return (
     <div>
-      <PageHeader title="asistencias" description="historial de marcas, con posibilidad de corrección" />
+      <PageHeader title="Asistencias" description="Historial de marcas, con posibilidad de corrección" />
 
       {error && (
         <div className="mb-4">
@@ -165,11 +165,11 @@ export default function Asistencias() {
       <Card className="mb-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Select
-            label="empleado"
+            label="Empleado"
             value={filters.empleadoId}
             onChange={(e) => setFilters((f) => ({ ...f, empleadoId: e.target.value }))}
           >
-            <option value="">todos</option>
+            <option value="">Todos</option>
             {empleados.map((e) => (
               <option key={e.id} value={e.id}>
                 {e.nombre}
@@ -177,27 +177,27 @@ export default function Asistencias() {
             ))}
           </Select>
           <Input
-            label="desde"
+            label="Desde"
             type="date"
             value={filters.desde}
             onChange={(e) => setFilters((f) => ({ ...f, desde: e.target.value }))}
           />
           <Input
-            label="hasta"
+            label="Hasta"
             type="date"
             value={filters.hasta}
             onChange={(e) => setFilters((f) => ({ ...f, hasta: e.target.value }))}
           />
           <div className="flex items-end">
             <Button onClick={load} className="w-full">
-              filtrar
+              Filtrar
             </Button>
           </div>
         </div>
       </Card>
 
       {loading ? (
-        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">cargando…</Card>
+        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">Cargando…</Card>
       ) : rows.length === 0 ? (
         <EmptyState icon={History} />
       ) : (
@@ -207,23 +207,23 @@ export default function Asistencias() {
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}
-        title="corregir marca de asistencia"
+        title="Corregir marca de asistencia"
         footer={
           <>
             <Button variant="secondary" onClick={() => setEditing(null)}>
-              cancelar
+              Cancelar
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'guardando…' : 'guardar corrección'}
+              {saving ? 'Guardando…' : 'Guardar corrección'}
             </Button>
           </>
         }
       >
         <div className="flex flex-col gap-4">
           <Banner tone="warning">
-            toda corrección queda registrada en el historial junto con el motivo indicado.
+            Toda corrección queda registrada en el historial junto con el motivo indicado.
           </Banner>
-          <Select label="tipo de marca" value={tipoMarcaEdit} onChange={(e) => setTipoMarcaEdit(e.target.value)}>
+          <Select label="Tipo de marca" value={tipoMarcaEdit} onChange={(e) => setTipoMarcaEdit(e.target.value)}>
             {TIPOS_MARCA.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
@@ -231,14 +231,14 @@ export default function Asistencias() {
             ))}
           </Select>
           <Input
-            label="fecha y hora"
+            label="Fecha y hora"
             type="datetime-local"
             value={horaEdit}
             onChange={(e) => setHoraEdit(e.target.value)}
           />
           <Textarea
-            label="motivo de la corrección (obligatorio)"
-            placeholder="ej. el empleado olvidó marcar salida, se confirma con su jefe directo"
+            label="Motivo de la corrección (obligatorio)"
+            placeholder="Ej. el empleado olvidó marcar salida, se confirma con su jefe directo"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             rows={3}

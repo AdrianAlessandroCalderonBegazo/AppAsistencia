@@ -23,7 +23,7 @@ export default function Login() {
       await login(dni.trim(), password)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err.message || 'no se pudo iniciar sesión')
+      setError(err.message || 'No se pudo iniciar sesión')
     } finally {
       setLoading(false)
     }
@@ -36,8 +36,8 @@ export default function Login() {
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-bg text-accent-text dark:bg-accent-darkBg dark:text-accent-darkText">
             <LogIn size={22} />
           </div>
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">panel de administración</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">control de asistencia y geolocalización</p>
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Panel de administración</h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Control de asistencia y geolocalización</p>
         </div>
 
         {error && (
@@ -48,7 +48,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            label="dni"
+            label="DNI"
             placeholder="12345678"
             value={dni}
             onChange={(e) => setDni(e.target.value)}
@@ -56,7 +56,7 @@ export default function Login() {
             autoFocus
           />
           <Input
-            label="contraseña"
+            label="Contraseña"
             type="password"
             placeholder="••••••••"
             value={password}
@@ -64,7 +64,7 @@ export default function Login() {
             required
           />
           <Button type="submit" disabled={loading} className="mt-2 w-full">
-            {loading ? 'ingresando…' : 'ingresar'}
+            {loading ? 'Ingresando…' : 'Ingresar'}
           </Button>
         </form>
       </div>

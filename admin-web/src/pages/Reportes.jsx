@@ -45,9 +45,9 @@ export default function Reportes() {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
-      setSuccess('el archivo se descargó correctamente')
+      setSuccess('El archivo se descargó correctamente')
     } catch (err) {
-      setError(err.message || 'no se pudo generar el reporte')
+      setError(err.message || 'No se pudo generar el reporte')
     } finally {
       setLoading(false)
     }
@@ -55,7 +55,7 @@ export default function Reportes() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <PageHeader title="reportes" description="exporta el historial de asistencias en formato csv" />
+      <PageHeader title="Reportes" description="Exporta el historial de asistencias en formato CSV" />
 
       {success && (
         <div className="mb-4">
@@ -71,12 +71,12 @@ export default function Reportes() {
       <Card>
         <div className="mb-4 flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
           <FileDown size={18} />
-          <span className="text-sm font-medium">parámetros del reporte</span>
+          <span className="text-sm font-medium">Parámetros del reporte</span>
         </div>
 
         <div className="flex flex-col gap-4">
-          <Select label="empleado" value={empleadoId} onChange={(e) => setEmpleadoId(e.target.value)}>
-            <option value="">todos los empleados</option>
+          <Select label="Empleado" value={empleadoId} onChange={(e) => setEmpleadoId(e.target.value)}>
+            <option value="">Todos los empleados</option>
             {empleados.map((e) => (
               <option key={e.id} value={e.id}>
                 {e.nombre}
@@ -85,13 +85,13 @@ export default function Reportes() {
           </Select>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input label="desde" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
-            <Input label="hasta" type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+            <Input label="Desde" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+            <Input label="Hasta" type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
           </div>
 
           <Button onClick={handleExport} disabled={loading} className="mt-2 w-full">
             <Download size={16} />
-            {loading ? 'generando…' : 'descargar csv'}
+            {loading ? 'Generando…' : 'Descargar CSV'}
           </Button>
         </div>
       </Card>

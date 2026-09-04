@@ -26,7 +26,7 @@ export default function Modal({ open, onClose, title, children, footer, size = '
           <button
             onClick={onClose}
             className="rounded-full p-1 text-zinc-400 hover:bg-neutral-bg hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
-            aria-label="cerrar"
+            aria-label="Cerrar"
           >
             <X size={18} />
           </button>

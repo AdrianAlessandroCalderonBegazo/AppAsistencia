@@ -37,7 +37,7 @@ export default function Horarios() {
         setEmpleados(list)
         if (list[0]) setEmpleadoId(String(list[0].id))
       } catch (err) {
-        setError(err.message || 'no se pudieron cargar los empleados')
+        setError(err.message || 'No se pudieron cargar los empleados')
       } finally {
         setLoading(false)
       }
@@ -69,7 +69,7 @@ export default function Horarios() {
           setHorario(emptyHorario)
         }
       } catch (err) {
-        if (active) setError(err.message || 'no se pudo cargar el horario')
+        if (active) setError(err.message || 'No se pudo cargar el horario')
       }
     }
     loadHorario()
@@ -109,9 +109,9 @@ export default function Horarios() {
         const created = await createHorario(payload)
         if (created?.id) update('id', created.id)
       }
-      setSuccess('horario guardado correctamente')
+      setSuccess('Horario guardado correctamente')
     } catch (err) {
-      setError(err.message || 'no se pudo guardar el horario')
+      setError(err.message || 'No se pudo guardar el horario')
     } finally {
       setSaving(false)
     }
@@ -119,7 +119,7 @@ export default function Horarios() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="horarios" description="define el horario de trabajo por empleado" />
+      <PageHeader title="Horarios" description="Define el horario de trabajo por empleado" />
 
       {success && (
         <div className="mb-4">
@@ -134,7 +134,7 @@ export default function Horarios() {
 
       <Card className="mb-4">
         <Select
-          label="empleado"
+          label="Empleado"
           value={empleadoId}
           onChange={(e) => setEmpleadoId(e.target.value)}
           disabled={loading}
@@ -150,11 +150,11 @@ export default function Horarios() {
       <Card>
         <div className="mb-4 flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
           <Clock size={18} />
-          <span className="text-sm font-medium">jornada laboral</span>
+          <span className="text-sm font-medium">Jornada laboral</span>
         </div>
 
         <div className="mb-5">
-          <span className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">días laborales</span>
+          <span className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Días laborales</span>
           <div className="flex flex-wrap gap-2">
             {DIAS.map((d) => (
               <button
@@ -175,25 +175,25 @@ export default function Horarios() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
-            label="hora de entrada"
+            label="Hora de entrada"
             type="time"
             value={horario.horaEntrada}
             onChange={(e) => update('horaEntrada', e.target.value)}
           />
           <Input
-            label="hora de salida"
+            label="Hora de salida"
             type="time"
             value={horario.horaSalida}
             onChange={(e) => update('horaSalida', e.target.value)}
           />
           <Input
-            label="inicio de almuerzo"
+            label="Inicio de almuerzo"
             type="time"
             value={horario.horaInicioAlmuerzo}
             onChange={(e) => update('horaInicioAlmuerzo', e.target.value)}
           />
           <Input
-            label="fin de almuerzo"
+            label="Fin de almuerzo"
             type="time"
             value={horario.horaFinAlmuerzo}
             onChange={(e) => update('horaFinAlmuerzo', e.target.value)}
@@ -202,19 +202,19 @@ export default function Horarios() {
 
         <div className="mt-4">
           <Input
-            label="tolerancia (minutos)"
+            label="Tolerancia (minutos)"
             type="number"
             min="0"
             value={horario.toleranciaMinutos}
             onChange={(e) => update('toleranciaMinutos', e.target.value)}
-            hint="minutos de gracia antes de marcar una llegada como tarde"
+            hint="Minutos de gracia antes de marcar una llegada como tarde"
           />
         </div>
 
         <div className="mt-6 flex justify-end">
           <Button onClick={handleSave} disabled={saving || !empleadoId}>
             <Save size={16} />
-            {saving ? 'guardando…' : 'guardar horario'}
+            {saving ? 'Guardando…' : 'Guardar horario'}
           </Button>
         </div>
       </Card>

@@ -22,7 +22,7 @@ export default function Sedes() {
       const data = await getSedes()
       setSedes(data || [])
     } catch (err) {
-      setError(err.message || 'no se pudieron cargar las sedes')
+      setError(err.message || 'No se pudieron cargar las sedes')
     } finally {
       setLoading(false)
     }
@@ -49,7 +49,7 @@ export default function Sedes() {
       })
       setSuccessId(sede.id)
     } catch (err) {
-      setError(err.message || 'no se pudo guardar la sede')
+      setError(err.message || 'No se pudo guardar la sede')
     } finally {
       setSavingId(null)
     }
@@ -59,7 +59,7 @@ export default function Sedes() {
     e.preventDefault()
     setCreateError(null)
     if (!newSede.nombre.trim() || newSede.latitud === '' || newSede.longitud === '') {
-      setCreateError('nombre, latitud y longitud son requeridos')
+      setCreateError('Nombre, latitud y longitud son requeridos')
       return
     }
     setCreating(true)
@@ -73,7 +73,7 @@ export default function Sedes() {
       setNewSede(emptyNewSede)
       await load()
     } catch (err) {
-      setCreateError(err.message || 'no se pudo crear la sede')
+      setCreateError(err.message || 'No se pudo crear la sede')
     } finally {
       setCreating(false)
     }
@@ -82,8 +82,8 @@ export default function Sedes() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader
-        title="sedes"
-        description="define la ubicación y el radio permitido para marcar asistencia"
+        title="Sedes"
+        description="Define la ubicación y el radio permitido para marcar asistencia"
       />
 
       {error && (
@@ -96,21 +96,21 @@ export default function Sedes() {
         <form onSubmit={handleCreate} className="flex flex-col gap-4">
           <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
             <Plus size={18} />
-            <span className="text-sm font-medium">nueva sede</span>
+            <span className="text-sm font-medium">Nueva sede</span>
           </div>
           <Input
-            label="nombre"
+            label="Nombre"
             value={newSede.nombre}
             onChange={(e) => setNewSede((s) => ({ ...s, nombre: e.target.value }))}
             required
           />
           <Banner tone="accent">
-            ingresa las coordenadas exactas de la sede. puedes obtenerlas abriendo el punto en google maps
-            y copiando la latitud y longitud que aparecen en la url.
+            Ingresa las coordenadas exactas de la sede. Puedes obtenerlas abriendo el punto en Google Maps
+            y copiando la latitud y longitud que aparecen en la URL.
           </Banner>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Input
-              label="latitud"
+              label="Latitud"
               type="number"
               step="any"
               value={newSede.latitud}
@@ -118,7 +118,7 @@ export default function Sedes() {
               required
             />
             <Input
-              label="longitud"
+              label="Longitud"
               type="number"
               step="any"
               value={newSede.longitud}
@@ -126,7 +126,7 @@ export default function Sedes() {
               required
             />
             <Input
-              label="radio permitido (metros)"
+              label="Radio permitido (metros)"
               type="number"
               min="0"
               value={newSede.radio_metros}
@@ -137,28 +137,28 @@ export default function Sedes() {
           <div className="flex justify-end">
             <Button type="submit" disabled={creating}>
               <Plus size={16} />
-              {creating ? 'creando…' : 'crear sede'}
+              {creating ? 'Creando…' : 'Crear sede'}
             </Button>
           </div>
         </form>
       </Card>
 
       {loading ? (
-        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">cargando…</Card>
+        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">Cargando…</Card>
       ) : sedes.length === 0 ? (
-        <EmptyState icon={Building2} message="todavía no hay sedes creadas" />
+        <EmptyState icon={Building2} message="Todavía no hay sedes creadas" />
       ) : (
         <div className="flex flex-col gap-4">
           {sedes.map((sede) => (
             <Card key={sede.id}>
               <div className="mb-4 flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
                 <Building2 size={18} />
-                <span className="text-sm font-medium">{sede.nombre || `sede #${sede.id}`}</span>
+                <span className="text-sm font-medium">{sede.nombre || `Sede #${sede.id}`}</span>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
-                  label="nombre"
+                  label="Nombre"
                   value={sede.nombre ?? ''}
                   onChange={(e) => update(sede.id, 'nombre', e.target.value)}
                 />
@@ -166,21 +166,21 @@ export default function Sedes() {
 
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Input
-                  label="latitud"
+                  label="Latitud"
                   type="number"
                   step="any"
                   value={sede.latitud ?? ''}
                   onChange={(e) => update(sede.id, 'latitud', e.target.value)}
                 />
                 <Input
-                  label="longitud"
+                  label="Longitud"
                   type="number"
                   step="any"
                   value={sede.longitud ?? ''}
                   onChange={(e) => update(sede.id, 'longitud', e.target.value)}
                 />
                 <Input
-                  label="radio permitido (metros)"
+                  label="Radio permitido (metros)"
                   type="number"
                   min="0"
                   value={sede.radio_metros ?? ''}
@@ -190,14 +190,14 @@ export default function Sedes() {
 
               {successId === sede.id && (
                 <div className="mt-4">
-                  <Banner tone="success">sede actualizada correctamente</Banner>
+                  <Banner tone="success">Sede actualizada correctamente</Banner>
                 </div>
               )}
 
               <div className="mt-4 flex justify-end">
                 <Button onClick={() => handleSave(sede)} disabled={savingId === sede.id}>
                   <Save size={16} />
-                  {savingId === sede.id ? 'guardando…' : 'guardar cambios'}
+                  {savingId === sede.id ? 'Guardando…' : 'Guardar cambios'}
                 </Button>
               </div>
             </Card>

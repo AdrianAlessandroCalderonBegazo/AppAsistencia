@@ -58,7 +58,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       canPop: !widget.forced,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('cambiar contraseña'),
+          title: const Text('Cambiar contraseña'),
           automaticallyImplyLeading: !widget.forced,
         ),
         body: SafeArea(
@@ -71,7 +71,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 children: [
                   if (widget.forced) ...[
                     Text(
-                      'por seguridad debes crear una contraseña nueva antes de continuar',
+                      'Por seguridad debes crear una contraseña nueva antes de continuar',
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 20),
@@ -79,24 +79,24 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   TextFormField(
                     controller: _actualController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'contraseña actual'),
-                    validator: (v) => (v == null || v.isEmpty) ? 'obligatorio' : null,
+                    decoration: const InputDecoration(labelText: 'Contraseña actual'),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Obligatorio' : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _nuevaController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'nueva contraseña'),
+                    decoration: const InputDecoration(labelText: 'Nueva contraseña'),
                     validator: (v) =>
-                        (v == null || v.length < 6) ? 'mínimo 6 caracteres' : null,
+                        (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _confirmarController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'confirmar nueva contraseña'),
+                    decoration: const InputDecoration(labelText: 'Confirmar nueva contraseña'),
                     validator: (v) =>
-                        v != _nuevaController.text ? 'las contraseñas no coinciden' : null,
+                        v != _nuevaController.text ? 'Las contraseñas no coinciden' : null,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -107,7 +107,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             width: 18,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('guardar y continuar'),
+                        : const Text('Guardar y continuar'),
                   ),
                 ],
               ),

@@ -6,10 +6,10 @@ import StatusPill from '../components/StatusPill.jsx'
 import Modal from '../components/Modal.jsx'
 
 const TIPO_LABEL = {
-  entrada: 'entrada',
-  salida_almuerzo: 'salida a almuerzo',
-  regreso_almuerzo: 'regreso de almuerzo',
-  salida: 'salida final',
+  entrada: 'Entrada',
+  salida_almuerzo: 'Salida a almuerzo',
+  regreso_almuerzo: 'Regreso de almuerzo',
+  salida: 'Salida final',
 }
 
 export default function Solicitudes() {
@@ -49,7 +49,7 @@ export default function Solicitudes() {
       const data = await getSolicitudes(estadoFilter || undefined)
       setItems(data || [])
     } catch (err) {
-      setError(err.message || 'no se pudieron cargar las solicitudes')
+      setError(err.message || 'No se pudieron cargar las solicitudes')
     } finally {
       setLoading(false)
     }
@@ -74,7 +74,7 @@ export default function Solicitudes() {
       if (action.decision === 'aprobada') {
         const site = siteByEmployee.get(action.item.empleado_id)
         if (!site) {
-          setSaveError('no se encontró la sede del empleado; recarga la página e intenta de nuevo')
+          setSaveError('No se encontró la sede del empleado; recarga la página e intenta de nuevo')
           setSaving(false)
           return
         }
@@ -85,7 +85,7 @@ export default function Solicitudes() {
         })
       } else {
         if (!respuesta.trim()) {
-          setSaveError('el motivo de rechazo es obligatorio')
+          setSaveError('El motivo de rechazo es obligatorio')
           setSaving(false)
           return
         }
@@ -94,7 +94,7 @@ export default function Solicitudes() {
       setAction(null)
       await load()
     } catch (err) {
-      setSaveError(err.message || 'no se pudo procesar la solicitud')
+      setSaveError(err.message || 'No se pudo procesar la solicitud')
     } finally {
       setSaving(false)
     }
@@ -103,8 +103,8 @@ export default function Solicitudes() {
   return (
     <div>
       <PageHeader
-        title="solicitudes de corrección"
-        description="revisa y responde las correcciones solicitadas por los empleados"
+        title="Solicitudes de corrección"
+        description="Revisa y responde las correcciones solicitadas por los empleados"
       />
 
       {error && (
@@ -115,17 +115,17 @@ export default function Solicitudes() {
 
       <Card className="mb-4">
         <div className="max-w-xs">
-          <Select label="estado" value={estadoFilter} onChange={(e) => setEstadoFilter(e.target.value)}>
-            <option value="">todas</option>
-            <option value="pendiente">pendiente</option>
-            <option value="aprobada">aprobada</option>
-            <option value="rechazada">rechazada</option>
+          <Select label="Estado" value={estadoFilter} onChange={(e) => setEstadoFilter(e.target.value)}>
+            <option value="">Todas</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="aprobada">Aprobada</option>
+            <option value="rechazada">Rechazada</option>
           </Select>
         </div>
       </Card>
 
       {loading ? (
-        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">cargando…</Card>
+        <Card className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">Cargando…</Card>
       ) : items.length === 0 ? (
         <EmptyState icon={MessageSquare} />
       ) : (
@@ -144,7 +144,7 @@ export default function Solicitudes() {
 
               {item.respuesta_admin && (
                 <div className="rounded-xl bg-neutral-bg px-3 py-2 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                  respuesta: {item.respuesta_admin}
+                  Respuesta: {item.respuesta_admin}
                 </div>
               )}
 
@@ -152,11 +152,11 @@ export default function Solicitudes() {
                 <div className="flex justify-end gap-2">
                   <Button variant="danger" onClick={() => openAction(item, 'rechazada')} className="px-3 py-1.5 text-xs">
                     <X size={14} />
-                    rechazar
+                    Rechazar
                   </Button>
                   <Button variant="success" onClick={() => openAction(item, 'aprobada')} className="px-3 py-1.5 text-xs">
                     <Check size={14} />
-                    aprobar solicitud
+                    Aprobar solicitud
                   </Button>
                 </div>
               )}
@@ -168,18 +168,18 @@ export default function Solicitudes() {
       <Modal
         open={!!action}
         onClose={() => setAction(null)}
-        title={action?.decision === 'aprobada' ? 'aprobar solicitud' : 'rechazar solicitud'}
+        title={action?.decision === 'aprobada' ? 'Aprobar solicitud' : 'Rechazar solicitud'}
         footer={
           <>
             <Button variant="secondary" onClick={() => setAction(null)}>
-              cancelar
+              Cancelar
             </Button>
             <Button
               variant={action?.decision === 'aprobada' ? 'success' : 'danger'}
               onClick={confirmAction}
               disabled={saving}
             >
-              {saving ? 'procesando…' : action?.decision === 'aprobada' ? 'confirmar aprobación' : 'confirmar rechazo'}
+              {saving ? 'Procesando…' : action?.decision === 'aprobada' ? 'Confirmar aprobación' : 'Confirmar rechazo'}
             </Button>
           </>
         }
@@ -187,16 +187,16 @@ export default function Solicitudes() {
         <div className="flex flex-col gap-4">
           {action?.decision === 'aprobada' ? (
             <>
-              <p>se creará la marca de asistencia correspondiente, registrada en la ubicación de la sede del empleado.</p>
+              <p>Se creará la marca de asistencia correspondiente, registrada en la ubicación de la sede del empleado.</p>
               <Input
-                label="fecha y hora de la marca"
+                label="Fecha y hora de la marca"
                 type="datetime-local"
                 value={horaMarcada}
                 onChange={(e) => setHoraMarcada(e.target.value)}
               />
               <Textarea
-                label="mensaje de respuesta (opcional)"
-                placeholder="explica brevemente la decisión al empleado"
+                label="Mensaje de respuesta (opcional)"
+                placeholder="Explica brevemente la decisión al empleado"
                 value={respuesta}
                 onChange={(e) => setRespuesta(e.target.value)}
                 rows={3}
@@ -204,10 +204,10 @@ export default function Solicitudes() {
             </>
           ) : (
             <>
-              <p>al rechazar, la marca de asistencia no se modificará.</p>
+              <p>Al rechazar, la marca de asistencia no se modificará.</p>
               <Textarea
-                label="motivo del rechazo (obligatorio)"
-                placeholder="explica brevemente por qué se rechaza"
+                label="Motivo del rechazo (obligatorio)"
+                placeholder="Explica brevemente por qué se rechaza"
                 value={respuesta}
                 onChange={(e) => setRespuesta(e.target.value)}
                 rows={3}

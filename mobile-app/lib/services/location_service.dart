@@ -20,7 +20,7 @@ class LocationException implements Exception {
 class LocationService {
   Future<CapturedLocation> getCurrentLocation() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
-      throw LocationException('activa la ubicación del dispositivo para poder marcar');
+      throw LocationException('Activa la ubicación del dispositivo para poder marcar');
     }
 
     var permission = await Geolocator.checkPermission();
@@ -28,7 +28,7 @@ class LocationService {
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-      throw LocationException('se necesita permiso de ubicación para poder marcar');
+      throw LocationException('Se necesita permiso de ubicación para poder marcar');
     }
 
     final position = await Geolocator.getCurrentPosition(

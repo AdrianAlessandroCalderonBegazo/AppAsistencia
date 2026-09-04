@@ -95,11 +95,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context: context,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('¿registrar de nuevo?'),
-          content: Text('ya marcaste tu ${type.label} a las $hora, ¿quieres registrar una nueva marca de todos modos?'),
+          title: const Text('¿Registrar de nuevo?'),
+          content: Text('Ya marcaste tu ${type.label.toLowerCase()} a las $hora, ¿quieres registrar una nueva marca de todos modos?'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('cancelar')),
-            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('sí, registrar')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sí, registrar')),
           ],
         ),
       );
@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       MarkStatus.pendienteSync => (
           colors.neutralBg,
           colors.neutralText,
-          'sin conexión: tu ${mark.tipoMarca.label} quedó pendiente de sincronizar'
+          'Sin conexión: tu ${mark.tipoMarca.label.toLowerCase()} quedó pendiente de sincronizar'
         ),
       MarkStatus.anomalia => (
           colors.warningBg,
@@ -164,10 +164,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('marcar asistencia'),
+        title: const Text('Marcar asistencia'),
         actions: [
           IconButton(
-            tooltip: 'cerrar sesión',
+            tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout_outlined),
             onPressed: () async {
               await _authService.logout();
@@ -196,25 +196,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               children: [
                 MarkButton(
                   icon: Icons.login_outlined,
-                  label: 'entrada',
+                  label: 'Entrada',
                   loading: _submittingType == MarkType.entrada,
                   onTap: () => _onMarkTap(MarkType.entrada),
                 ),
                 MarkButton(
                   icon: Icons.lunch_dining_outlined,
-                  label: 'salida a almuerzo',
+                  label: 'Salida a almuerzo',
                   loading: _submittingType == MarkType.salidaAlmuerzo,
                   onTap: () => _onMarkTap(MarkType.salidaAlmuerzo),
                 ),
                 MarkButton(
                   icon: Icons.restaurant_outlined,
-                  label: 'regreso de almuerzo',
+                  label: 'Regreso de almuerzo',
                   loading: _submittingType == MarkType.regresoAlmuerzo,
                   onTap: () => _onMarkTap(MarkType.regresoAlmuerzo),
                 ),
                 MarkButton(
                   icon: Icons.logout_outlined,
-                  label: 'salida final',
+                  label: 'Salida final',
                   loading: _submittingType == MarkType.salida,
                   onTap: () => _onMarkTap(MarkType.salida),
                 ),
@@ -223,12 +223,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             const SizedBox(height: 24),
             _QuickLinks(),
             const SizedBox(height: 24),
-            Text('marcas de hoy', style: Theme.of(context).textTheme.titleLarge),
+            Text('Marcas de hoy', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             if (_loadingToday)
               const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
             else if (_todayMarks.isEmpty)
-              const Padding(padding: EdgeInsets.all(16), child: Text('todavía no tienes marcas hoy'))
+              const Padding(padding: EdgeInsets.all(16), child: Text('Todavía no tienes marcas hoy'))
             else
               ..._todayMarks.map((mark) => _TodayMarkTile(mark: mark, onUndo: () => _undo(mark))),
           ],
@@ -278,7 +278,7 @@ class _QuickLinks extends StatelessWidget {
         Expanded(
           child: _QuickLinkCard(
             icon: Icons.calendar_today_outlined,
-            label: 'mi horario',
+            label: 'Mi horario',
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ScheduleScreen())),
           ),
         ),
@@ -286,7 +286,7 @@ class _QuickLinks extends StatelessWidget {
         Expanded(
           child: _QuickLinkCard(
             icon: Icons.history_outlined,
-            label: 'mi historial',
+            label: 'Mi historial',
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen())),
           ),
         ),
@@ -294,7 +294,7 @@ class _QuickLinks extends StatelessWidget {
         Expanded(
           child: _QuickLinkCard(
             icon: Icons.chat_bubble_outline,
-            label: 'solicitudes',
+            label: 'Solicitudes',
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestsListScreen())),
           ),
         ),
@@ -362,7 +362,7 @@ class _TodayMarkTile extends StatelessWidget {
               ),
             ),
             if (mark.isWithinEditWindow)
-              TextButton(onPressed: onUndo, child: const Text('deshacer')),
+              TextButton(onPressed: onUndo, child: const Text('Deshacer')),
           ],
         ),
       ),

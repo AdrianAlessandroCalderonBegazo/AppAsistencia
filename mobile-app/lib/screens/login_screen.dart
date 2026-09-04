@@ -64,13 +64,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   Icon(Icons.location_on_outlined, size: 56, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 12),
                   Text(
-                    'control de asistencia',
+                    'Control de asistencia',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'ingresa con tu dni y contraseña',
+                    'Ingresa con tu DNI y contraseña',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
@@ -78,22 +78,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _dniController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'dni', prefixIcon: Icon(Icons.badge_outlined)),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'ingresa tu dni' : null,
+                    decoration: const InputDecoration(labelText: 'DNI', prefixIcon: Icon(Icons.badge_outlined)),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa tu DNI' : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscure,
                     decoration: InputDecoration(
-                      labelText: 'contraseña',
+                      labelText: 'Contraseña',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? 'ingresa tu contraseña' : null,
+                    validator: (v) => (v == null || v.isEmpty) ? 'Ingresa tu contraseña' : null,
                     onFieldSubmitted: (_) => _submit(),
                   ),
                   const SizedBox(height: 24),
@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: 18,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('ingresar'),
+                        : const Text('Ingresar'),
                   ),
                 ],
               ),

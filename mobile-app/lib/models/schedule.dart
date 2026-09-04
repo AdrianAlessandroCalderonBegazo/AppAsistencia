@@ -27,13 +27,13 @@ class Schedule {
   final int toleranciaMinutos;
 
   static const _nombresDias = [
-    'domingo',
-    'lunes',
-    'martes',
-    'miércoles',
-    'jueves',
-    'viernes',
-    'sábado',
+    'Domingo',
+    'Lunes',
+    'Martes',
+    'Miércoles',
+    'Jueves',
+    'Viernes',
+    'Sábado',
   ];
 
   List<String> get nombresDias =>

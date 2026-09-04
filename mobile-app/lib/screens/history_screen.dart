@@ -52,7 +52,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final formatoRango = DateFormat('d MMM', 'es');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('mi historial'),
+        title: const Text('Mi historial'),
         actions: [
           IconButton(icon: const Icon(Icons.date_range_outlined), onPressed: _pickRange),
         ],
@@ -84,7 +84,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 }
                 final marks = snapshot.data ?? [];
                 if (marks.isEmpty) {
-                  return const Center(child: Text('no hay marcas en este rango de fechas'));
+                  return const Center(child: Text('No hay marcas en este rango de fechas'));
                 }
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

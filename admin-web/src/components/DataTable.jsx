@@ -1,5 +1,5 @@
 // tabla simple y reutilizable: columns = [{ key, header, render? }]
-export default function DataTable({ columns, rows, rowKey = 'id', emptyMessage = 'sin resultados por ahora' }) {
+export default function DataTable({ columns, rows, rowKey = 'id', emptyMessage = 'Sin resultados por ahora' }) {
   if (!rows || rows.length === 0) {
     return (
       <div className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-border py-14 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">

@@ -58,7 +58,7 @@ export default function EmpleadoAlta() {
     setError(null)
     setCreatedInfo(null)
     if (!form.sedeId) {
-      setError('selecciona una sede')
+      setError('Selecciona una sede')
       return
     }
     setLoading(true)
@@ -80,7 +80,7 @@ export default function EmpleadoAlta() {
       setCreatedInfo({ dni, nombre: form.nombre.trim(), password: genericPasswordFor(dni) })
       setForm({ ...initialForm, sedeId: form.sedeId })
     } catch (err) {
-      setError(err.message || 'no se pudo crear el empleado')
+      setError(err.message || 'No se pudo crear el empleado')
     } finally {
       setLoading(false)
     }
@@ -89,14 +89,14 @@ export default function EmpleadoAlta() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader
-        title="alta de empleado"
-        description="registra un nuevo empleado con su horario inicial"
+        title="Alta de empleado"
+        description="Registra un nuevo empleado con su horario inicial"
       />
 
       {createdInfo && (
         <div className="mb-4">
           <Banner tone="success">
-            {createdInfo.nombre || createdInfo.dni} fue creado correctamente. contraseña genérica asignada:{' '}
+            {createdInfo.nombre || createdInfo.dni} fue creado correctamente. Contraseña genérica asignada:{' '}
             <strong>{createdInfo.password}</strong> — el empleado deberá cambiarla al ingresar por primera vez.
           </Banner>
         </div>
@@ -111,30 +111,30 @@ export default function EmpleadoAlta() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
             <UserPlus size={18} />
-            <span className="text-sm font-medium">datos personales</span>
+            <span className="text-sm font-medium">Datos personales</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="dni"
+              label="DNI"
               value={form.dni}
               onChange={(e) => update('dni', e.target.value)}
               required
             />
             <Input
-              label="nombre completo"
+              label="Nombre completo"
               value={form.nombre}
               onChange={(e) => update('nombre', e.target.value)}
               required
             />
           </div>
           <Select
-            label="sede"
+            label="Sede"
             value={form.sedeId}
             onChange={(e) => update('sedeId', e.target.value)}
             required
           >
             <option value="" disabled>
-              selecciona una sede…
+              Selecciona una sede…
             </option>
             {sedes.map((s) => (
               <option key={s.id} value={s.id}>
@@ -144,16 +144,16 @@ export default function EmpleadoAlta() {
           </Select>
           {sedes.length === 0 && (
             <Banner tone="warning">
-              todavía no hay ninguna sede configurada — crea una primero en la sección "sedes".
+              Todavía no hay ninguna sede configurada — crea una primero en la sección "Sedes".
             </Banner>
           )}
 
           <hr className="border-neutral-border dark:border-zinc-800" />
 
-          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">horario inicial</div>
+          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Horario inicial</div>
 
           <div>
-            <span className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">días laborales</span>
+            <span className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Días laborales</span>
             <div className="flex flex-wrap gap-2">
               {DIAS.map((d) => (
                 <button
@@ -174,27 +174,27 @@ export default function EmpleadoAlta() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="hora de entrada"
+              label="Hora de entrada"
               type="time"
               value={form.horaEntrada}
               onChange={(e) => update('horaEntrada', e.target.value)}
               required
             />
             <Input
-              label="hora de salida"
+              label="Hora de salida"
               type="time"
               value={form.horaSalida}
               onChange={(e) => update('horaSalida', e.target.value)}
               required
             />
             <Input
-              label="inicio de almuerzo"
+              label="Inicio de almuerzo"
               type="time"
               value={form.horaInicioAlmuerzo}
               onChange={(e) => update('horaInicioAlmuerzo', e.target.value)}
             />
             <Input
-              label="fin de almuerzo"
+              label="Fin de almuerzo"
               type="time"
               value={form.horaFinAlmuerzo}
               onChange={(e) => update('horaFinAlmuerzo', e.target.value)}
@@ -202,20 +202,20 @@ export default function EmpleadoAlta() {
           </div>
 
           <Input
-            label="tolerancia (minutos)"
+            label="Tolerancia (minutos)"
             type="number"
             min="0"
             value={form.toleranciaMinutos}
             onChange={(e) => update('toleranciaMinutos', e.target.value)}
-            hint="minutos de gracia antes de marcar una llegada como tarde"
+            hint="Minutos de gracia antes de marcar una llegada como tarde"
           />
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => navigate('/')}>
-              cancelar
+              Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'guardando…' : 'crear empleado'}
+              {loading ? 'Guardando…' : 'Crear empleado'}
             </Button>
           </div>
         </form>

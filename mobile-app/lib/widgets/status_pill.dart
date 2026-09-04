@@ -13,13 +13,13 @@ class StatusPill extends StatelessWidget {
     final colors = context.semanticColors;
     return switch (status) {
       MarkStatus.dentroDeArea =>
-        StatusPill(label: 'dentro de área', bg: colors.successBg, fg: colors.successText),
+        StatusPill(label: 'Dentro de área', bg: colors.successBg, fg: colors.successText),
       MarkStatus.anomalia =>
-        StatusPill(label: 'anomalía', bg: colors.warningBg, fg: colors.warningText),
+        StatusPill(label: 'Anomalía', bg: colors.warningBg, fg: colors.warningText),
       MarkStatus.pendienteSync =>
-        StatusPill(label: 'pendiente de sincronizar', bg: colors.neutralBg, fg: colors.neutralText),
+        StatusPill(label: 'Pendiente de sincronizar', bg: colors.neutralBg, fg: colors.neutralText),
       MarkStatus.creadaPorSolicitud =>
-        StatusPill(label: 'creada por solicitud', bg: colors.accentBg, fg: colors.accentText),
+        StatusPill(label: 'Creada por solicitud', bg: colors.accentBg, fg: colors.accentText),
     };
   }
 
@@ -27,11 +27,11 @@ class StatusPill extends StatelessWidget {
     final colors = context.semanticColors;
     return switch (status) {
       RequestStatus.pendiente =>
-        StatusPill(label: 'pendiente', bg: colors.warningBg, fg: colors.warningText),
+        StatusPill(label: 'Pendiente', bg: colors.warningBg, fg: colors.warningText),
       RequestStatus.aprobada =>
-        StatusPill(label: 'aprobada', bg: colors.successBg, fg: colors.successText),
+        StatusPill(label: 'Aprobada', bg: colors.successBg, fg: colors.successText),
       RequestStatus.rechazada =>
-        StatusPill(label: 'rechazada', bg: colors.dangerBg, fg: colors.dangerText),
+        StatusPill(label: 'Rechazada', bg: colors.dangerBg, fg: colors.dangerText),
     };
   }
 
