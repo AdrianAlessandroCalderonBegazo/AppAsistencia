@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Check, X, MessageSquare } from 'lucide-react'
-import { getSolicitudes, approveSolicitud, rejectSolicitud, getEmpleados, getSedes } from '../api/resources.js'
+import { getSolicitudes, approveSolicitud, rejectSolicitud, getEmpleados } from '../api/resources.js'
 import { PageHeader, Card, Select, Input, Button, Textarea, Banner, EmptyState } from '../components/ui.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import Modal from '../components/Modal.jsx'
@@ -15,11 +15,12 @@ const TIPO_LABEL = {
 export default function Solicitudes() {
   const [estadoFilter, setEstadoFilter] = useState('pendiente')
   const [items, setItems] = useState([])
-  const [siteByEmployee, setSiteByEmployee] = useState(new Map())
+  const [sitesByEmployee, setSitesByEmployee] = useState(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [action, setAction] = useState(null) // { item, decision: 'aprobada' | 'rechazada' }
   const [horaMarcada, setHoraMarcada] = useState('')
+  const [selectedSiteId, setSelectedSiteId] = useState('')
   const [respuesta, setRespuesta] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
@@ -27,14 +28,12 @@ export default function Solicitudes() {
   useEffect(() => {
     async function loadSitios() {
       try {
-        const [empleados, sedes] = await Promise.all([getEmpleados(), getSedes()])
-        const sedeById = new Map((sedes || []).map((s) => [s.id, s]))
+        const empleados = await getEmpleados()
         const map = new Map()
         for (const emp of empleados || []) {
-          const site = sedeById.get(emp.sede_id)
-          if (site) map.set(emp.id, site)
+          if ((emp.sedes || []).length > 0) map.set(emp.id, emp.sedes)
         }
-        setSiteByEmployee(map)
+        setSitesByEmployee(map)
       } catch {
         // si falla, igual se puede rechazar solicitudes; solo aprobar requerirá reintentar
       }
@@ -63,6 +62,8 @@ export default function Solicitudes() {
   function openAction(item, decision) {
     setAction({ item, decision })
     setHoraMarcada(`${item.fecha}T${item.hora_solicitada ? item.hora_solicitada.slice(0, 5) : '08:00'}`)
+    const sitesEmpleado = sitesByEmployee.get(item.empleado_id) || []
+    setSelectedSiteId(sitesEmpleado[0] ? String(sitesEmpleado[0].id) : '')
     setRespuesta('')
     setSaveError(null)
   }
@@ -72,7 +73,8 @@ export default function Solicitudes() {
     setSaveError(null)
     try {
       if (action.decision === 'aprobada') {
-        const site = siteByEmployee.get(action.item.empleado_id)
+        const sitesEmpleado = sitesByEmployee.get(action.item.empleado_id) || []
+        const site = sitesEmpleado.find((s) => String(s.id) === selectedSiteId)
         if (!site) {
           setSaveError('No se encontró la sede del empleado; recarga la página e intenta de nuevo')
           setSaving(false)
@@ -187,7 +189,16 @@ export default function Solicitudes() {
         <div className="flex flex-col gap-4">
           {action?.decision === 'aprobada' ? (
             <>
-              <p>Se creará la marca de asistencia correspondiente, registrada en la ubicación de la sede del empleado.</p>
+              <p>Se creará la marca de asistencia correspondiente, registrada en la ubicación de la sede elegida.</p>
+              {(sitesByEmployee.get(action.item.empleado_id) || []).length > 1 && (
+                <Select label="Sede donde se registrará la marca" value={selectedSiteId} onChange={(e) => setSelectedSiteId(e.target.value)}>
+                  {sitesByEmployee.get(action.item.empleado_id).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
+                  ))}
+                </Select>
+              )}
               <Input
                 label="Fecha y hora de la marca"
                 type="datetime-local"

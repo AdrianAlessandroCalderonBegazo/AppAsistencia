@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
-import { UserMinus, UserCheck, KeyRound, Search } from 'lucide-react'
-import { getEmpleados, deactivateEmpleado, reactivateEmpleado, resetEmpleadoPassword } from '../api/resources.js'
+import { UserMinus, UserCheck, KeyRound, Building2, Search } from 'lucide-react'
+import {
+  getEmpleados,
+  deactivateEmpleado,
+  reactivateEmpleado,
+  resetEmpleadoPassword,
+  getSedes,
+  updateEmpleadoSedes,
+} from '../api/resources.js'
 import { PageHeader, Card, Input, Button, Banner, EmptyState } from '../components/ui.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import DataTable from '../components/DataTable.jsx'
@@ -15,6 +22,7 @@ function genericPasswordFor(dni) {
 
 export default function EmpleadoBaja() {
   const [empleados, setEmpleados] = useState([])
+  const [sedes, setSedes] = useState([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,12 +30,18 @@ export default function EmpleadoBaja() {
   const [target, setTarget] = useState(null) // { row, decision: 'baja' | 'alta' | 'reset' }
   const [confirming, setConfirming] = useState(false)
 
+  const [sedesEditing, setSedesEditing] = useState(null) // empleado en edición de sedes
+  const [sedesSeleccionadas, setSedesSeleccionadas] = useState([])
+  const [savingSedes, setSavingSedes] = useState(false)
+  const [sedesError, setSedesError] = useState(null)
+
   async function load() {
     setLoading(true)
     setError(null)
     try {
-      const data = await getEmpleados()
-      setEmpleados(data || [])
+      const [empleadosData, sedesData] = await Promise.all([getEmpleados(), getSedes()])
+      setEmpleados(empleadosData || [])
+      setSedes(sedesData || [])
     } catch (err) {
       setError(err.message || 'No se pudieron cargar los empleados')
     } finally {
@@ -77,9 +91,60 @@ export default function EmpleadoBaja() {
     }
   }
 
+  function openSedesEdit(row) {
+    setSedesEditing(row)
+    setSedesSeleccionadas((row.sedes || []).map((s) => s.id))
+    setSedesError(null)
+  }
+
+  function toggleSedeSeleccionada(sedeId) {
+    setSedesSeleccionadas((ids) =>
+      ids.includes(sedeId) ? ids.filter((id) => id !== sedeId) : [...ids, sedeId],
+    )
+  }
+
+  async function saveSedes() {
+    if (sedesSeleccionadas.length === 0) {
+      setSedesError('Selecciona al menos una sede')
+      return
+    }
+    setSavingSedes(true)
+    setSedesError(null)
+    try {
+      await updateEmpleadoSedes(sedesEditing.id, sedesSeleccionadas)
+      setSedesEditing(null)
+      setSuccess(`Se actualizaron las sedes de ${sedesEditing.nombre || sedesEditing.dni}`)
+      await load()
+    } catch (err) {
+      setSedesError(err.message || 'No se pudieron guardar las sedes')
+    } finally {
+      setSavingSedes(false)
+    }
+  }
+
   const columns = [
     { key: 'nombre', header: 'Empleado' },
     { key: 'dni', header: 'DNI' },
+    {
+      key: 'sedes',
+      header: 'Sedes',
+      render: (row) => (
+        <div className="flex flex-wrap gap-1">
+          {(row.sedes || []).length === 0 ? (
+            <span className="text-xs text-zinc-400">sin sede</span>
+          ) : (
+            row.sedes.map((s) => (
+              <span
+                key={s.id}
+                className="rounded-full bg-neutral-bg px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+              >
+                {s.nombre}
+              </span>
+            ))
+          )}
+        </div>
+      ),
+    },
     {
       key: 'estado',
       header: 'Estado',
@@ -90,6 +155,10 @@ export default function EmpleadoBaja() {
       header: '',
       render: (row) => (
         <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => openSedesEdit(row)} className="px-3 py-1.5 text-xs">
+            <Building2 size={14} />
+            Sedes
+          </Button>
           <Button
             variant="secondary"
             onClick={() => setTarget({ row, decision: 'reset' })}
@@ -130,7 +199,7 @@ export default function EmpleadoBaja() {
     <div>
       <PageHeader
         title="Gestión de empleados"
-        description="Da de baja, reactiva o restablece la contraseña de un empleado"
+        description="Da de baja, reactiva, cambia las sedes o restablece la contraseña de un empleado"
       />
 
       {success && (
@@ -199,6 +268,50 @@ export default function EmpleadoBaja() {
             </>
           )}
         </p>
+      </Modal>
+
+      <Modal
+        open={!!sedesEditing}
+        onClose={() => setSedesEditing(null)}
+        title="Sedes asignadas"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setSedesEditing(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveSedes} disabled={savingSedes}>
+              {savingSedes ? 'Guardando…' : 'Guardar'}
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p>
+            Elige en qué sede o sedes puede marcar <strong>{sedesEditing?.nombre || sedesEditing?.dni}</strong>. Si
+            selecciona más de una, podrá marcar en cualquiera indistintamente — útil si rota entre locales o cambia
+            de sede a mitad de jornada.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {sedes.map((s) => (
+              <button
+                type="button"
+                key={s.id}
+                onClick={() => toggleSedeSeleccionada(s.id)}
+                className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  sedesSeleccionadas.includes(s.id)
+                    ? 'border-accent-solid bg-accent-bg text-accent-text dark:bg-accent-darkBg dark:text-accent-darkText'
+                    : 'border-neutral-border text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'
+                }`}
+              >
+                {s.nombre}
+              </button>
+            ))}
+          </div>
+          {sedes.length === 0 && (
+            <Banner tone="warning">Todavía no hay ninguna sede configurada.</Banner>
+          )}
+          {sedesError && <Banner tone="danger">{sedesError}</Banner>}
+        </div>
       </Modal>
     </div>
   )

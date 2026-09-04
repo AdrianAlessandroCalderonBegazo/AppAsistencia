@@ -11,7 +11,7 @@ export const createEmpleado = (data) => api.post('/employees', data)
 export const resetEmpleadoPassword = (id) => api.patch(`/employees/${id}/reset-password`)
 export const deactivateEmpleado = (id) => api.patch(`/employees/${id}/deactivate`)
 export const reactivateEmpleado = (id) => api.patch(`/employees/${id}/reactivate`)
-export const updateEmpleadoSede = (id, sedeId) => api.patch(`/employees/${id}/sede`, { sedeId })
+export const updateEmpleadoSedes = (id, sedeIds) => api.patch(`/employees/${id}/sedes`, { sedeIds })
 
 // --- horarios ---
 export const getHorarios = (empleadoId) => api.get(`/schedules/employee/${empleadoId}`)

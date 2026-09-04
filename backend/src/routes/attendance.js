@@ -1,7 +1,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { requireRole } = require('../middleware/requireRole');
-const { isWithinSite } = require('../utils/geo');
+const { isWithinAnySite } = require('../utils/geo');
 const { notifyEmployeeMarkEdited } = require('../services/notifications');
 
 const router = express.Router();
@@ -11,12 +11,17 @@ const EXPECTED_ORDER = { entrada: 0, salida_almuerzo: 1, regreso_almuerzo: 2, sa
 const SELF_CORRECTION_WINDOW_MS = 10 * 60 * 1000;
 const LATE_SYNC_THRESHOLD_MS = 60 * 60 * 1000;
 
-async function getSiteForEmployee(empleadoId) {
+// Un empleado puede tener más de una sede asignada (ver empleado_sedes) — se devuelven todas,
+// la marca se valida contra cualquiera de ellas (isWithinAnySite).
+async function getSitesForEmployee(empleadoId) {
   const { rows } = await query(
-    `SELECT s.* FROM empresas_sedes s JOIN usuarios u ON u.sede_id = s.id WHERE u.id = $1`,
+    `SELECT s.* FROM empresas_sedes s
+     JOIN empleado_sedes es ON es.sede_id = s.id
+     WHERE es.empleado_id = $1
+     ORDER BY s.nombre`,
     [empleadoId]
   );
-  return rows[0] || null;
+  return rows;
 }
 
 // Un "es_anomalia" no bloquea nada: el cliente ya confirmó con el usuario. El servidor solo
@@ -43,10 +48,10 @@ async function detectAnomaly(empleadoId, fecha, tipoMarca) {
 async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng, origen }) {
   if (!TIPOS.includes(tipoMarca)) throw Object.assign(new Error('tipo_marca inválido.'), { status: 400 });
 
-  const site = await getSiteForEmployee(empleadoId);
-  if (!site) throw Object.assign(new Error('El empleado no tiene una sede asignada.'), { status: 400 });
+  const sites = await getSitesForEmployee(empleadoId);
+  if (sites.length === 0) throw Object.assign(new Error('El empleado no tiene ninguna sede asignada.'), { status: 400 });
 
-  const { distanceMeters, withinArea } = isWithinSite(lat, lng, site);
+  const { distanceMeters, withinArea } = isWithinAnySite(lat, lng, sites);
 
   // La entrada es la única marca que exige estar físicamente en la sede: sin ella no hay
   // certeza de que la jornada empezó en el lugar de trabajo, así que se rechaza directamente
@@ -55,7 +60,7 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
   // queda marcada como anomalía para que el admin la revise (ver más abajo).
   if (tipoMarca === 'entrada' && !withinArea) {
     throw Object.assign(
-      new Error('No se puede marcar la entrada fuera del área permitida de la sede.'),
+      new Error('No se puede marcar la entrada fuera del área permitida de tus sedes asignadas.'),
       { status: 403 }
     );
   }
@@ -64,7 +69,7 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
   const motivos = [];
   if (orderAnomaly.esAnomalia) motivos.push(orderAnomaly.motivo);
   if (tipoMarca === 'salida' && !withinArea) {
-    motivos.push('Salida marcada fuera del área permitida de la sede.');
+    motivos.push('Salida marcada fuera del área permitida de las sedes asignadas.');
   }
   const esAnomalia = motivos.length > 0;
   const motivo = motivos.length > 0 ? motivos.join(' ') : null;
@@ -202,8 +207,8 @@ router.patch('/:id', async (req, res) => {
   const nuevaLat = lat ?? marca.latitud;
   const nuevaLng = lng ?? marca.longitud;
   const nuevaHora = horaMarcada ?? marca.hora_marcada;
-  const site = await getSiteForEmployee(marca.empleado_id);
-  const { distanceMeters, withinArea } = isWithinSite(nuevaLat, nuevaLng, site);
+  const sites = await getSitesForEmployee(marca.empleado_id);
+  const { distanceMeters, withinArea } = isWithinAnySite(nuevaLat, nuevaLng, sites);
 
   const { rows: updatedRows } = await query(
     `UPDATE asistencias SET latitud = $1, longitud = $2, hora_marcada = $3, distancia_metros = $4, dentro_area = $5
@@ -238,10 +243,10 @@ router.patch('/:id/admin', requireRole('admin'), async (req, res) => {
   if (sets.length === 0) return res.status(400).json({ error: 'No se enviaron campos válidos para corregir.' });
 
   if (cambios.lat !== undefined || cambios.lng !== undefined) {
-    const site = await getSiteForEmployee(anterior.empleado_id);
+    const sites = await getSitesForEmployee(anterior.empleado_id);
     const lat = cambios.lat ?? anterior.latitud;
     const lng = cambios.lng ?? anterior.longitud;
-    const { distanceMeters, withinArea } = isWithinSite(lat, lng, site);
+    const { distanceMeters, withinArea } = isWithinAnySite(lat, lng, sites);
     params.push(distanceMeters); sets.push(`distancia_metros = $${params.length}`);
     params.push(withinArea); sets.push(`dentro_area = $${params.length}`);
   }

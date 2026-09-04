@@ -51,20 +51,30 @@ El access token dura poco (`JWT_ACCESS_EXPIRES_IN`, default 2h); el refresh toke
 Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessToken>`.
 
 ### Empleados (`/employees`, admin salvo donde se indique)
-- `GET /employees` — lista empleados.
-- `POST /employees` — crea `{ dni, nombre, sedeId, horarioInicial? }`, asigna contraseña genérica.
+- `GET /employees` — lista empleados; cada uno incluye `sedes: [{id, nombre, latitud, longitud, radio_metros}]`.
+- `POST /employees` — crea `{ dni, nombre, sedeIds: number[], horarioInicial? }`, asigna contraseña genérica.
+  Un empleado puede tener varias sedes (rota entre locales, o cambia de sede a mitad de jornada) —
+  `sedeIds` requiere al menos una.
 - `PATCH /employees/:id/reset-password` — vuelve a la contraseña genérica y fuerza cambio.
 - `PATCH /employees/:id/deactivate` / `/reactivate` — baja/alta lógica (conserva historial).
-- `PATCH /employees/:id/sede` — reasigna sede.
+- `PATCH /employees/:id/sedes` — reemplaza el conjunto completo de sedes asignadas: `{ sedeIds: number[] }`.
 - `PUT /employees/me/fcm-token` — cualquier usuario autenticado registra su token push.
 
 ### Asistencia (`/attendance`)
-- `POST /attendance` — marca `{ tipoMarca, horaMarcada, lat, lng }`. El servidor calcula
-  `dentro_area`/`distancia_metros` con Haversine (nunca confía en un "isValid" del cliente) y
-  marca `es_anomalia` si es duplicada o fuera de secuencia — nunca la rechaza.
+- `POST /attendance` — marca `{ tipoMarca, horaMarcada, lat, lng, fecha? }`. El servidor calcula
+  `dentro_area`/`distancia_metros` con Haversine contra **cualquiera** de las sedes asignadas al
+  empleado (nunca confía en un "isValid" del cliente). `fecha` (YYYY-MM-DD, calendario local del
+  dispositivo) es opcional pero recomendada — si se omite, se deriva de `horaMarcada` en UTC, lo
+  que puede desfasar un día según la zona horaria del empleado.
+  Reglas de ubicación por tipo de marca:
+  - `entrada`: **se rechaza (403)** si no está dentro del radio de ninguna sede asignada.
+  - `salida_almuerzo` / `regreso_almuerzo`: sin restricción de ubicación.
+  - `salida`: se acepta desde cualquier lugar, pero si queda fuera de todas las sedes se marca
+    `es_anomalia = true` con `motivo_anomalia` explicando el motivo, para que el admin la revise.
+  - Duplicados o marcas fuera del orden esperado también quedan como `es_anomalia`, sin bloquear.
 - `POST /attendance/sync` — sincronización offline: `{ marcas: [...] }`, origen `offline_sync`,
-  valida geolocalización al momento de sincronizar y marca `sincronizacion_tardia` si pasó más de
-  1 hora entre `horaMarcada` y ahora.
+  valida geolocalización al momento de sincronizar (mismas reglas de arriba) y marca
+  `sincronizacion_tardia` si pasó más de 1 hora entre `horaMarcada` y ahora.
 - `GET /attendance/history?desde&hasta` — historial propio.
 - `DELETE /attendance/:id` / `PATCH /attendance/:id` — autocorrección del empleado dentro de los
   10 minutos posteriores a la marca (`editable_hasta`); pasada la ventana responde 403 y el

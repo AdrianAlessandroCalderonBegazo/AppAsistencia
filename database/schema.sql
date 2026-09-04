@@ -23,11 +23,31 @@ CREATE TABLE IF NOT EXISTS usuarios (
   rol                  VARCHAR(20) NOT NULL CHECK (rol IN ('empleado', 'admin')),
   estado               VARCHAR(20) NOT NULL DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo')),
   debe_cambiar_password BOOLEAN NOT NULL DEFAULT true,
-  sede_id              INTEGER REFERENCES empresas_sedes(id),
+  sede_id              INTEGER REFERENCES empresas_sedes(id), -- histórico: ver empleado_sedes, un empleado puede tener varias
   fcm_token            VARCHAR(255),
   creado_en            TIMESTAMPTZ NOT NULL DEFAULT now(),
   actualizado_en       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Un empleado puede estar asignado a más de una sede (ej. rota entre dos locales, o empieza
+-- la jornada en una y la termina en otra). La marca de asistencia se valida contra CUALQUIERA
+-- de las sedes asignadas, no contra una sola — ver backend/src/utils/geo.js (isWithinAnySite).
+CREATE TABLE IF NOT EXISTS empleado_sedes (
+  id            SERIAL PRIMARY KEY,
+  empleado_id   INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  sede_id       INTEGER NOT NULL REFERENCES empresas_sedes(id) ON DELETE CASCADE,
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (empleado_id, sede_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_empleado_sedes_empleado ON empleado_sedes(empleado_id);
+
+-- Backfill idempotente: si ya existían empleados con usuarios.sede_id de cuando solo se podía
+-- asignar una sede, se copian a empleado_sedes para que no pierdan su asignación al migrar.
+-- Seguro de re-ejecutar (ON CONFLICT DO NOTHING) — no duplica ni pisa asignaciones ya hechas.
+INSERT INTO empleado_sedes (empleado_id, sede_id)
+SELECT id, sede_id FROM usuarios WHERE sede_id IS NOT NULL
+ON CONFLICT (empleado_id, sede_id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS horarios (
   id                  SERIAL PRIMARY KEY,

@@ -24,4 +24,17 @@ function isWithinSite(lat, lng, site) {
   };
 }
 
-module.exports = { haversineDistanceMeters, isWithinSite };
+// Un empleado puede tener varias sedes asignadas (rota entre locales, o cambia de sede a
+// mitad de jornada); la marca es válida si cae dentro del radio de CUALQUIERA de ellas. Si no
+// cae dentro de ninguna, se reporta la más cercana (para mostrar la distancia real al admin).
+function isWithinAnySite(lat, lng, sites) {
+  let best = null;
+  for (const site of sites) {
+    const result = isWithinSite(lat, lng, site);
+    if (result.withinArea) return { site, ...result };
+    if (!best || result.distanceMeters < best.distanceMeters) best = { site, ...result };
+  }
+  return best || { site: null, distanceMeters: null, withinArea: false };
+}
+
+module.exports = { haversineDistanceMeters, isWithinSite, isWithinAnySite };

@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { UserPlus } from 'lucide-react'
+import { UserPlus, Building2 } from 'lucide-react'
 import { createEmpleado, getSedes } from '../api/resources.js'
-import { PageHeader, Card, Input, Select, Button, Banner } from '../components/ui.jsx'
+import { PageHeader, Card, Input, Button, Banner } from '../components/ui.jsx'
 import { DIAS, DIAS_LABORALES_DEFAULT } from '../utils/dias.js'
 
 const initialForm = {
   dni: '',
   nombre: '',
-  sedeId: '',
+  sedeIds: [],
   horaEntrada: '08:00',
   horaSalida: '17:00',
   horaInicioAlmuerzo: '13:00',
@@ -36,7 +36,7 @@ export default function EmpleadoAlta() {
     getSedes()
       .then((data) => {
         setSedes(data || [])
-        if (data?.[0]) update('sedeId', String(data[0].id))
+        if (data?.[0]) update('sedeIds', [data[0].id])
       })
       .catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,12 +53,19 @@ export default function EmpleadoAlta() {
     }))
   }
 
+  function toggleSede(sedeId) {
+    setForm((f) => ({
+      ...f,
+      sedeIds: f.sedeIds.includes(sedeId) ? f.sedeIds.filter((id) => id !== sedeId) : [...f.sedeIds, sedeId],
+    }))
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
     setCreatedInfo(null)
-    if (!form.sedeId) {
-      setError('Selecciona una sede')
+    if (form.sedeIds.length === 0) {
+      setError('Selecciona al menos una sede')
       return
     }
     setLoading(true)
@@ -67,7 +74,7 @@ export default function EmpleadoAlta() {
       await createEmpleado({
         dni,
         nombre: form.nombre.trim(),
-        sedeId: Number(form.sedeId),
+        sedeIds: form.sedeIds,
         horarioInicial: {
           horaEntrada: form.horaEntrada,
           horaSalida: form.horaSalida,
@@ -78,7 +85,7 @@ export default function EmpleadoAlta() {
         },
       })
       setCreatedInfo({ dni, nombre: form.nombre.trim(), password: genericPasswordFor(dni) })
-      setForm({ ...initialForm, sedeId: form.sedeId })
+      setForm({ ...initialForm, sedeIds: form.sedeIds })
     } catch (err) {
       setError(err.message || 'No se pudo crear el empleado')
     } finally {
@@ -127,21 +134,34 @@ export default function EmpleadoAlta() {
               required
             />
           </div>
-          <Select
-            label="Sede"
-            value={form.sedeId}
-            onChange={(e) => update('sedeId', e.target.value)}
-            required
-          >
-            <option value="" disabled>
-              Selecciona una sede…
-            </option>
-            {sedes.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nombre}
-              </option>
-            ))}
-          </Select>
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+              <Building2 size={16} />
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                Sedes donde puede marcar
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {sedes.map((s) => (
+                <button
+                  type="button"
+                  key={s.id}
+                  onClick={() => toggleSede(s.id)}
+                  className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    form.sedeIds.includes(s.id)
+                      ? 'border-accent-solid bg-accent-bg text-accent-text dark:bg-accent-darkBg dark:text-accent-darkText'
+                      : 'border-neutral-border text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'
+                  }`}
+                >
+                  {s.nombre}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-zinc-400">
+              Si elige más de una, podrá marcar en cualquiera de ellas indistintamente (útil si rota entre
+              locales o cambia de sede a mitad de jornada).
+            </p>
+          </div>
           {sedes.length === 0 && (
             <Banner tone="warning">
               Todavía no hay ninguna sede configurada — crea una primero en la sección "Sedes".
