@@ -14,7 +14,14 @@ const _tokenKey = 'auth_token';
 /// conozcan detalles de almacenamiento de sesión.
 class ApiClient {
   ApiClient._internal() {
-    _dio = Dio(BaseOptions(baseUrl: apiBaseUrl, connectTimeout: const Duration(seconds: 15)));
+    _dio = Dio(BaseOptions(
+      baseUrl: apiBaseUrl,
+      // El backend gratuito de Render "duerme" tras inactividad y puede tardar
+      // 30-50s en despertar en la primera petición: un timeout corto lo confunde
+      // con falta de conexión real y encola la marca innecesariamente.
+      connectTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 60),
+    ));
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await getToken();
