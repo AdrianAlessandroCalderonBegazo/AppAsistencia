@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Pencil, History } from 'lucide-react'
+import { Pencil, History, Trash2, RotateCcw } from 'lucide-react'
 import { getEmpleados, getAsistencias, updateAsistenciaAdmin } from '../api/resources.js'
 import { PageHeader, Card, Select, Input, Button, Textarea, Banner, EmptyState } from '../components/ui.jsx'
 import StatusPill from '../components/StatusPill.jsx'
@@ -42,6 +42,11 @@ export default function Asistencias() {
   const [motivo, setMotivo] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+
+  const [deleteTarget, setDeleteTarget] = useState(null) // { row, restore: bool }
+  const [deleteMotivo, setDeleteMotivo] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   useEffect(() => {
     getEmpleados()
@@ -97,6 +102,33 @@ export default function Asistencias() {
     }
   }
 
+  function openDelete(row) {
+    setDeleteTarget({ row, restore: row.anulada })
+    setDeleteMotivo('')
+    setDeleteError(null)
+  }
+
+  async function handleDelete() {
+    if (!deleteMotivo.trim()) {
+      setDeleteError('El motivo es obligatorio')
+      return
+    }
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await updateAsistenciaAdmin(deleteTarget.row.id, {
+        anulada: !deleteTarget.restore,
+        motivo: deleteMotivo.trim(),
+      })
+      setDeleteTarget(null)
+      await load()
+    } catch (err) {
+      setDeleteError(err.message || 'No se pudo procesar el cambio')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   function badgesFor(row) {
     const badges = []
     if (row.es_anomalia) badges.push('anomalia')
@@ -143,10 +175,23 @@ export default function Asistencias() {
       key: 'accion',
       header: '',
       render: (row) => (
-        <Button variant="secondary" onClick={() => openEdit(row)} className="px-3 py-1.5 text-xs">
-          <Pencil size={14} />
-          Corregir
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => openEdit(row)} className="px-3 py-1.5 text-xs">
+            <Pencil size={14} />
+            Corregir
+          </Button>
+          {row.anulada ? (
+            <Button variant="secondary" onClick={() => openDelete(row)} className="px-3 py-1.5 text-xs">
+              <RotateCcw size={14} />
+              Restaurar
+            </Button>
+          ) : (
+            <Button variant="danger" onClick={() => openDelete(row)} className="px-3 py-1.5 text-xs">
+              <Trash2 size={14} />
+              Eliminar
+            </Button>
+          )}
+        </div>
       ),
     },
   ]
@@ -244,6 +289,43 @@ export default function Asistencias() {
             required
           />
           {saveError && <Banner tone="danger">{saveError}</Banner>}
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={deleteTarget?.restore ? 'Restaurar marca' : 'Eliminar marca'}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant={deleteTarget?.restore ? 'primary' : 'danger'}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Guardando…' : deleteTarget?.restore ? 'Sí, restaurar' : 'Sí, eliminar'}
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <Banner tone="warning">
+            {deleteTarget?.restore
+              ? 'La marca volverá a contar como activa en el historial y los reportes.'
+              : 'La marca no se borra físicamente: queda marcada como eliminada, deja de contar como activa en historial y reportes, y se conserva en la auditoría por si hay que revisarla.'}
+          </Banner>
+          <Textarea
+            label="Motivo (obligatorio)"
+            placeholder={deleteTarget?.restore ? 'Ej. se anuló por error' : 'Ej. marca duplicada, se registró dos veces'}
+            value={deleteMotivo}
+            onChange={(e) => setDeleteMotivo(e.target.value)}
+            rows={3}
+            required
+          />
+          {deleteError && <Banner tone="danger">{deleteError}</Banner>}
         </div>
       </Modal>
     </div>

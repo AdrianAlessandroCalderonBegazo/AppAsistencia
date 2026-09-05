@@ -80,7 +80,11 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
   10 minutos posteriores a la marca (`editable_hasta`); pasada la ventana responde 403 y el
   empleado debe usar `/requests`.
 - `PATCH /attendance/:id/admin` (admin) — corrección manual; requiere `motivo` en el body y deja
-  auditoría en `correcciones_auditoria` (valor anterior/nuevo) antes de aplicar el cambio.
+  auditoría en `correcciones_auditoria` (valor anterior/nuevo) antes de aplicar el cambio. Campos
+  editables: `tipoMarca`, `horaMarcada`, `lat`, `lng`, `esAnomalia`, `motivoAnomalia`, `anulada`.
+  "Eliminar" una marca desde el panel es `{ anulada: true, motivo }`: no se borra físicamente
+  (se conserva para auditoría), pero deja de contar como marca activa; `{ anulada: false, motivo }`
+  la restaura.
 - `GET /attendance/employee/:empleadoId` (admin) — historial de un empleado.
 - `GET /attendance?empleadoId&desde&hasta` (admin) — marcas de todos los empleados, con filtros
   opcionales; usada por el dashboard y la vista de asistencias del panel.

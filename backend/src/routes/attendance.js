@@ -231,6 +231,9 @@ router.patch('/:id/admin', requireRole('admin'), async (req, res) => {
   const campoPorClave = {
     tipoMarca: 'tipo_marca', horaMarcada: 'hora_marcada', lat: 'latitud', lng: 'longitud',
     esAnomalia: 'es_anomalia', motivoAnomalia: 'motivo_anomalia',
+    // anulada permite "eliminar" (y restaurar) una marca sin borrarla físicamente: se
+    // conserva para auditoría/temas laborales y deja de contar como marca activa del día.
+    anulada: 'anulada',
   };
   const sets = [];
   const params = [];
