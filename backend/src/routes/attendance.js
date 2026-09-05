@@ -24,6 +24,50 @@ async function getSitesForEmployee(empleadoId) {
   return rows;
 }
 
+// Horario activo del empleado para el día de la semana de `fecha` (0=domingo..6=sábado, igual
+// que dias_semana). Si tiene más de un horario activo que aplica ese día, se usa el más reciente.
+async function getHorarioDelDia(empleadoId, fecha) {
+  const diaSemana = new Date(`${fecha}T00:00:00`).getDay();
+  const { rows } = await query(
+    `SELECT * FROM horarios WHERE empleado_id = $1 AND activo = true AND $2 = ANY(dias_semana)
+     ORDER BY creado_en DESC LIMIT 1`,
+    [empleadoId, diaSemana]
+  );
+  return rows[0] || null;
+}
+
+function timeStringToMinutes(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// No bloquea nada (igual que el resto de anomalías): solo avisa si la marca cae fuera del
+// horario asignado del empleado, con la tolerancia configurada, para que el admin la revise.
+function detectHorarioAnomaly(horario, tipoMarca, horaLocal) {
+  if (!horario || !horaLocal) return null;
+  const marcadaMin = timeStringToMinutes(horaLocal);
+  const tolerancia = horario.tolerancia_minutos ?? 10;
+
+  if (tipoMarca === 'entrada') {
+    if (marcadaMin > timeStringToMinutes(horario.hora_entrada) + tolerancia) {
+      return 'Entrada marcada fuera de horario (llegada tardía).';
+    }
+  } else if (tipoMarca === 'salida') {
+    if (marcadaMin < timeStringToMinutes(horario.hora_salida) - tolerancia) {
+      return 'Salida marcada fuera de horario (se retiró antes de tiempo).';
+    }
+  } else if (tipoMarca === 'salida_almuerzo' && horario.hora_inicio_almuerzo) {
+    if (marcadaMin > timeStringToMinutes(horario.hora_inicio_almuerzo) + tolerancia) {
+      return 'Salida a almuerzo marcada fuera de horario.';
+    }
+  } else if (tipoMarca === 'regreso_almuerzo' && horario.hora_fin_almuerzo) {
+    if (marcadaMin > timeStringToMinutes(horario.hora_fin_almuerzo) + tolerancia) {
+      return 'Regreso de almuerzo marcado fuera de horario (tardanza).';
+    }
+  }
+  return null;
+}
+
 // Un "es_anomalia" no bloquea nada: el cliente ya confirmó con el usuario. El servidor solo
 // registra la marca y deja constancia de por qué es anómala (duplicado o fuera de secuencia).
 async function detectAnomaly(empleadoId, fecha, tipoMarca) {
@@ -45,7 +89,7 @@ async function detectAnomaly(empleadoId, fecha, tipoMarca) {
   return { esAnomalia: false, motivo: null };
 }
 
-async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng, origen }) {
+async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng, origen, horaLocal }) {
   if (!TIPOS.includes(tipoMarca)) throw Object.assign(new Error('tipo_marca inválido.'), { status: 400 });
 
   const sites = await getSitesForEmployee(empleadoId);
@@ -71,6 +115,9 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
   if (tipoMarca === 'salida' && !withinArea) {
     motivos.push('Salida marcada fuera del área permitida de las sedes asignadas.');
   }
+  const horario = await getHorarioDelDia(empleadoId, fecha);
+  const horarioAnomaly = detectHorarioAnomaly(horario, tipoMarca, horaLocal);
+  if (horarioAnomaly) motivos.push(horarioAnomaly);
   const esAnomalia = motivos.length > 0;
   const motivo = motivos.length > 0 ? motivos.join(' ') : null;
 
@@ -92,7 +139,7 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
 }
 
 router.post('/', async (req, res) => {
-  const { tipoMarca, horaMarcada, lat, lng, fecha: fechaCliente } = req.body;
+  const { tipoMarca, horaMarcada, lat, lng, fecha: fechaCliente, horaLocal: horaLocalCliente } = req.body;
   if (tipoMarca === undefined || horaMarcada === undefined || lat === undefined || lng === undefined) {
     return res.status(400).json({ error: 'tipoMarca, horaMarcada, lat y lng son requeridos.' });
   }
@@ -100,10 +147,13 @@ router.post('/', async (req, res) => {
   // derivarla de horaMarcada en UTC puede caer en el día siguiente/anterior según la zona
   // horaria del empleado, y la marca dejaría de aparecer al filtrar por "hoy".
   const fecha = fechaCliente || new Date(horaMarcada).toISOString().slice(0, 10);
+  // Igual razón para horaLocal: comparar contra el horario asignado (hora_entrada, etc.) necesita
+  // la hora de reloj del empleado, no la del servidor ni la UTC.
+  const horaLocal = horaLocalCliente || new Date(horaMarcada).toTimeString().slice(0, 5);
 
   try {
     const marca = await insertMark({
-      empleadoId: req.user.id, fecha, tipoMarca, horaMarcada, lat, lng, origen: 'normal',
+      empleadoId: req.user.id, fecha, tipoMarca, horaMarcada, lat, lng, origen: 'normal', horaLocal,
     });
     res.status(201).json(marca);
   } catch (err) {
@@ -122,15 +172,16 @@ router.post('/sync', async (req, res) => {
 
   const resultados = [];
   for (const marca of marcas) {
-    const { tipoMarca, horaMarcada, lat, lng, fecha: fechaCliente } = marca;
+    const { tipoMarca, horaMarcada, lat, lng, fecha: fechaCliente, horaLocal: horaLocalCliente } = marca;
     if (tipoMarca === undefined || horaMarcada === undefined || lat === undefined || lng === undefined) {
       resultados.push({ error: 'Marca incompleta.', marca });
       continue;
     }
     const fecha = fechaCliente || new Date(horaMarcada).toISOString().slice(0, 10);
+    const horaLocal = horaLocalCliente || new Date(horaMarcada).toTimeString().slice(0, 5);
     try {
       const inserted = await insertMark({
-        empleadoId: req.user.id, fecha, tipoMarca, horaMarcada, lat, lng, origen: 'offline_sync',
+        empleadoId: req.user.id, fecha, tipoMarca, horaMarcada, lat, lng, origen: 'offline_sync', horaLocal,
       });
       resultados.push(inserted);
     } catch (err) {

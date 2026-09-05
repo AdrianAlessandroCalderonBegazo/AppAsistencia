@@ -35,6 +35,10 @@ export const updateSede = (id, data) => api.patch(`/sites/${id}`, data)
 
 // --- reportes ---
 export const getReporteCsvBlob = (params = {}) => api.blob(`/reports/attendance.csv${qs(params)}`)
+export const getReporteResumen = (params = {}) => api.get(`/reports/summary${qs(params)}`)
+
+// --- auditoría de correcciones/eliminaciones ---
+export const getAuditoria = (params = {}) => api.get(`/audit${qs(params)}`)
 
 function qs(params) {
   const clean = Object.fromEntries(

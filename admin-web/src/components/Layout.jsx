@@ -8,6 +8,7 @@ import {
   MessageSquare,
   FileDown,
   Building2,
+  ShieldCheck,
   LogOut,
   Menu,
 } from 'lucide-react'
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { to: '/solicitudes', label: 'Solicitudes de corrección', icon: MessageSquare },
   { to: '/reportes', label: 'Reportes', icon: FileDown },
   { to: '/sedes', label: 'Sedes', icon: Building2 },
+  { to: '/auditoria', label: 'Historial de correcciones', icon: ShieldCheck },
 ]
 
 export default function Layout() {

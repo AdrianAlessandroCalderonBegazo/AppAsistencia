@@ -109,6 +109,15 @@ class AttendanceMark {
     if (motivo.contains('fuera del orden')) {
       return 'Se registró, pero fuera del orden esperado del día';
     }
+    if (motivo.contains('llegada tardía')) {
+      return 'Se registró, pero llegaste tarde según tu horario';
+    }
+    if (motivo.contains('se retiró antes')) {
+      return 'Se registró, pero saliste antes de tu horario';
+    }
+    if (motivo.contains('fuera de horario')) {
+      return 'Se registró, pero fuera de tu horario asignado';
+    }
     return 'Se registró con una observación, un admin la revisará';
   }
 
@@ -120,6 +129,10 @@ class AttendanceMark {
         // UTC, la fecha en UTC ya sería "mañana" y la marca desaparecería de "hoy"/"historial"
         // al filtrar por la fecha local del dispositivo.
         'fecha': _localDateString(horaMarcada),
+        // Hora de reloj local explícita (no UTC): el backend la usa para comparar contra el
+        // horario asignado del empleado (hora_entrada, etc.), que está en su zona horaria,
+        // no en la del servidor.
+        'horaLocal': _localTimeString(horaMarcada),
         'lat': latitud,
         'lng': longitud,
         // el backend todavía no persiste ni usa esta señal; se envía igual para
@@ -134,4 +147,11 @@ String _localDateString(DateTime dt) {
   final m = local.month.toString().padLeft(2, '0');
   final d = local.day.toString().padLeft(2, '0');
   return '$y-$m-$d';
+}
+
+String _localTimeString(DateTime dt) {
+  final local = dt.isUtc ? dt.toLocal() : dt;
+  final h = local.hour.toString().padLeft(2, '0');
+  final m = local.minute.toString().padLeft(2, '0');
+  return '$h:$m';
 }

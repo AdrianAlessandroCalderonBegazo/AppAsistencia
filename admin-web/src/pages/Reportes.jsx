@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { FileDown, Download } from 'lucide-react'
-import { getEmpleados, getReporteCsvBlob } from '../api/resources.js'
-import { PageHeader, Card, Select, Input, Button, Banner } from '../components/ui.jsx'
+import { FileDown, Download, BarChart3 } from 'lucide-react'
+import { getEmpleados, getReporteCsvBlob, getReporteResumen } from '../api/resources.js'
+import { PageHeader, Card, Select, Input, Button, Banner, EmptyState } from '../components/ui.jsx'
+import DataTable from '../components/DataTable.jsx'
 import { todayIso, daysAgoIso } from '../utils/date.js'
 
 export default function Reportes() {
@@ -13,10 +14,36 @@ export default function Reportes() {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
 
+  const [resumen, setResumen] = useState([])
+  const [resumenLoading, setResumenLoading] = useState(true)
+  const [resumenError, setResumenError] = useState(null)
+
   useEffect(() => {
     getEmpleados()
       .then((data) => setEmpleados((data || []).filter((e) => e.estado === 'activo')))
       .catch(() => {})
+  }, [])
+
+  async function loadResumen() {
+    setResumenLoading(true)
+    setResumenError(null)
+    try {
+      const data = await getReporteResumen({
+        empleadoId: empleadoId || undefined,
+        desde: fechaInicio,
+        hasta: fechaFin,
+      })
+      setResumen(data || [])
+    } catch (err) {
+      setResumenError(err.message || 'No se pudo cargar el resumen')
+    } finally {
+      setResumenLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadResumen()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleExport() {
@@ -45,9 +72,19 @@ export default function Reportes() {
     }
   }
 
+  const columnasResumen = [
+    { key: 'nombre', header: 'Empleado' },
+    { key: 'diasConMarca', header: 'Días con marca' },
+    { key: 'horasTrabajadas', header: 'Horas trabajadas', render: (r) => r.horasTrabajadas.toFixed(2) },
+    { key: 'tardanzas', header: 'Tardanzas' },
+    { key: 'salidasAnticipadas', header: 'Salidas anticipadas' },
+    { key: 'marcasFueraDeArea', header: 'Marcas fuera de área' },
+    { key: 'anomalias', header: 'Anomalías totales' },
+  ]
+
   return (
-    <div className="mx-auto max-w-xl">
-      <PageHeader title="Reportes" description="Exporta el historial de asistencias en formato CSV" />
+    <div>
+      <PageHeader title="Reportes" description="Exporta el historial de asistencias y revisa un resumen por empleado" />
 
       {success && (
         <div className="mb-4">
@@ -60,13 +97,13 @@ export default function Reportes() {
         </div>
       )}
 
-      <Card>
+      <Card className="mb-4">
         <div className="mb-4 flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
           <FileDown size={18} />
           <span className="text-sm font-medium">Parámetros del reporte</span>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Select label="Empleado" value={empleadoId} onChange={(e) => setEmpleadoId(e.target.value)}>
             <option value="">Todos los empleados</option>
             {empleados.map((e) => (
@@ -75,17 +112,40 @@ export default function Reportes() {
               </option>
             ))}
           </Select>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Desde" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
-            <Input label="Hasta" type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+          <Input label="Desde" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+          <Input label="Hasta" type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+          <div className="flex items-end gap-2">
+            <Button variant="secondary" onClick={loadResumen} disabled={resumenLoading} className="w-full">
+              Actualizar resumen
+            </Button>
           </div>
-
-          <Button onClick={handleExport} disabled={loading} className="mt-2 w-full">
-            <Download size={16} />
-            {loading ? 'Generando…' : 'Descargar CSV'}
-          </Button>
         </div>
+
+        <Button onClick={handleExport} disabled={loading} className="mt-4 w-full sm:w-auto">
+          <Download size={16} />
+          {loading ? 'Generando…' : 'Descargar CSV'}
+        </Button>
+      </Card>
+
+      <Card>
+        <div className="mb-4 flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+          <BarChart3 size={18} />
+          <span className="text-sm font-medium">Resumen por empleado</span>
+        </div>
+
+        {resumenError && (
+          <div className="mb-4">
+            <Banner tone="danger">{resumenError}</Banner>
+          </div>
+        )}
+
+        {resumenLoading ? (
+          <div className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">Cargando…</div>
+        ) : resumen.length === 0 ? (
+          <EmptyState icon={BarChart3} />
+        ) : (
+          <DataTable columns={columnasResumen} rows={resumen} rowKey="empleadoId" />
+        )}
       </Card>
     </div>
   )

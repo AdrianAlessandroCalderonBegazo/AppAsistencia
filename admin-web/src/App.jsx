@@ -11,6 +11,7 @@ import Asistencias from './pages/Asistencias.jsx'
 import Solicitudes from './pages/Solicitudes.jsx'
 import Reportes from './pages/Reportes.jsx'
 import Sedes from './pages/Sedes.jsx'
+import Auditoria from './pages/Auditoria.jsx'
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/solicitudes" element={<Solicitudes />} />
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/sedes" element={<Sedes />} />
+        <Route path="/auditoria" element={<Auditoria />} />
       </Route>
     </Routes>
   )

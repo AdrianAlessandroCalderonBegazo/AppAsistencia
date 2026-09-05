@@ -11,6 +11,7 @@ const requestRoutes = require('./routes/requests');
 const scheduleRoutes = require('./routes/schedules');
 const siteRoutes = require('./routes/sites');
 const reportRoutes = require('./routes/reports');
+const auditRoutes = require('./routes/audit');
 
 const app = express();
 
@@ -37,6 +38,7 @@ api.use('/requests', requestRoutes);
 api.use('/schedules', scheduleRoutes);
 api.use('/sites', siteRoutes);
 api.use('/reports', reportRoutes);
+api.use('/audit', auditRoutes);
 
 app.use('/api', api);
 

@@ -72,6 +72,11 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
   - `salida`: se acepta desde cualquier lugar, pero si queda fuera de todas las sedes se marca
     `es_anomalia = true` con `motivo_anomalia` explicando el motivo, para que el admin la revise.
   - Duplicados o marcas fuera del orden esperado también quedan como `es_anomalia`, sin bloquear.
+  - Si el empleado tiene un horario activo (`/schedules`) para ese día de la semana, marcar fuera
+    de la tolerancia configurada (`entrada` tarde, `salida` temprano, almuerzo fuera de horario)
+    también queda como `es_anomalia`, sin bloquear. Requiere el campo opcional `horaLocal`
+    (HH:mm, hora de reloj del empleado — no UTC); si se omite se deriva de `horaMarcada` en la
+    zona horaria del servidor, lo que puede ser impreciso.
 - `POST /attendance/sync` — sincronización offline: `{ marcas: [...] }`, origen `offline_sync`,
   valida geolocalización al momento de sincronizar (mismas reglas de arriba) y marca
   `sincronizacion_tardia` si pasó más de 1 hora entre `horaMarcada` y ahora.
@@ -108,7 +113,17 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
 `empresas_sedes` (lat/lng/radio).
 
 ### Reportes (`/reports`, admin)
-`GET /reports/attendance.csv?empleadoId&desde&hasta` — CSV de asistencias.
+- `GET /reports/attendance.csv?empleadoId&desde&hasta` — CSV de asistencias crudas.
+- `GET /reports/summary?empleadoId&desde&hasta` — resumen por empleado: días con marca, horas
+  trabajadas (entrada→salida, descontando almuerzo si ambas marcas existen), tardanzas, salidas
+  anticipadas, marcas fuera de área y anomalías totales. Se calcula en el servidor a partir de
+  las marcas del rango (no persiste nada nuevo).
+
+### Auditoría (`/audit`, admin)
+`GET /audit?empleadoId&desde&hasta` — historial de correcciones/eliminaciones hechas por un admin
+sobre marcas de asistencia (tabla `correcciones_auditoria`, poblada únicamente por
+`PATCH /attendance/:id/admin`). Cada entrada trae `valor_anterior`/`valor_nuevo` (JSONB) y el
+`motivo` obligatorio que dio el admin.
 
 ## Notificaciones push
 
