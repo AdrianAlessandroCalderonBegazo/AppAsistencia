@@ -95,6 +95,23 @@ class AttendanceMark {
   bool get isWithinEditWindow =>
       !pendienteSync && editableHasta != null && DateTime.now().isBefore(editableHasta!);
 
+  /// Mensaje específico para mostrarle al empleado por qué su marca quedó como anomalía,
+  /// interpretando el motivo que arma el backend (ver detectAnomaly/insertMark en
+  /// backend/src/routes/attendance.js) en vez de un genérico "anomalía" poco claro.
+  String get anomalyDescription {
+    final motivo = motivoAnomalia ?? '';
+    if (motivo.contains('fuera del área')) {
+      return 'Se registró, pero fuera del lugar de trabajo';
+    }
+    if (motivo.contains('duplicada')) {
+      return 'Se registró, pero ya tenías una marca de este tipo hoy';
+    }
+    if (motivo.contains('fuera del orden')) {
+      return 'Se registró, pero fuera del orden esperado del día';
+    }
+    return 'Se registró con una observación, un admin la revisará';
+  }
+
   Map<String, dynamic> toSubmitJson() => {
         'tipoMarca': tipoMarca.apiValue,
         'horaMarcada': horaMarcada.toUtc().toIso8601String(),

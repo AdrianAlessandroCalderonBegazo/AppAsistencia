@@ -31,7 +31,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _load() {
-    setState(() => _future = _attendanceService.history(desde: _range.start, hasta: _range.end));
+    setState(() => _future = _fetchWithRetry());
+  }
+
+  // El backend gratuito de Render puede tardar unos segundos en despertar tras estar
+  // inactivo: se reintenta una vez antes de mostrar el error al empleado.
+  Future<List<AttendanceMark>> _fetchWithRetry() async {
+    try {
+      return await _attendanceService.history(desde: _range.start, hasta: _range.end);
+    } catch (_) {
+      await Future.delayed(const Duration(seconds: 4));
+      return _attendanceService.history(desde: _range.start, hasta: _range.end);
+    }
   }
 
   Future<void> _pickRange() async {
@@ -80,7 +91,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text(friendlyErrorMessage(snapshot.error!)));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(friendlyErrorMessage(snapshot.error!), textAlign: TextAlign.center),
+                        const SizedBox(height: 12),
+                        OutlinedButton(onPressed: _load, child: const Text('Reintentar')),
+                      ],
+                    ),
+                  );
                 }
                 final marks = snapshot.data ?? [];
                 if (marks.isEmpty) {

@@ -61,6 +61,12 @@ String friendlyErrorMessage(Object error) {
   if (error is DioException) {
     final data = error.response?.data;
     if (data is Map && data['error'] is String) return data['error'] as String;
+    // Un 502/503/504 sin cuerpo JSON suele ser el proxy de Render respondiendo mientras
+    // el backend (plan gratuito) todavía está despertando, no un error real de la app.
+    final statusCode = error.response?.statusCode;
+    if (statusCode != null && statusCode >= 500) {
+      return 'El servidor está iniciando, intenta de nuevo en unos segundos';
+    }
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:

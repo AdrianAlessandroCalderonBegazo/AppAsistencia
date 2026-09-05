@@ -65,19 +65,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _loadToday() async {
     setState(() => _loadingToday = true);
-    try {
-      final marks = await _attendanceService.todayMarks();
-      final pending = await _attendanceService.pendingCount;
-      if (!mounted) return;
-      setState(() {
-        _todayMarks = marks;
-        _pendingSyncCount = pending;
-      });
-    } catch (_) {
-      // sin conexión al abrir: se muestra la lista vacía, no es un error bloqueante.
-    } finally {
-      if (mounted) setState(() => _loadingToday = false);
+    // El backend gratuito de Render puede tardar unos segundos en despertar tras estar
+    // inactivo: se reintenta una vez antes de rendirse y dejar la lista como estaba.
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      try {
+        final marks = await _attendanceService.todayMarks();
+        final pending = await _attendanceService.pendingCount;
+        if (!mounted) return;
+        setState(() {
+          _todayMarks = marks;
+          _pendingSyncCount = pending;
+        });
+        break;
+      } catch (_) {
+        if (attempt == 2 || !mounted) break;
+        await Future.delayed(const Duration(seconds: 4));
+      }
     }
+    if (mounted) setState(() => _loadingToday = false);
   }
 
   AttendanceMark? _lastOf(MarkType type) {
@@ -136,11 +141,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           colors.neutralText,
           'Sin conexión: tu ${mark.tipoMarca.label.toLowerCase()} quedó pendiente de sincronizar'
         ),
-      MarkStatus.anomalia => (
-          colors.warningBg,
-          colors.warningText,
-          '${mark.tipoMarca.label} registrada con una anomalía, un admin la revisará'
-        ),
+      MarkStatus.anomalia => (colors.warningBg, colors.warningText, mark.anomalyDescription),
       _ => (colors.successBg, colors.successText, '${mark.tipoMarca.label} registrada correctamente'),
     };
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
