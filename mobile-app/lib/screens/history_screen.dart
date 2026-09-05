@@ -92,13 +92,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 }
                 if (snapshot.hasError) {
                   return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(friendlyErrorMessage(snapshot.error!), textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        OutlinedButton(onPressed: _load, child: const Text('Reintentar')),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(friendlyErrorMessage(snapshot.error!), textAlign: TextAlign.center),
+                          const SizedBox(height: 6),
+                          // Detalle técnico crudo (tipo de excepción, código de estado, etc.):
+                          // ayuda a diagnosticar el problema real en vez de solo el mensaje genérico.
+                          Text(
+                            snapshot.error.toString(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: context.semanticColors.neutralText, fontSize: 11),
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton(onPressed: _load, child: const Text('Reintentar')),
+                        ],
+                      ),
                     ),
                   );
                 }

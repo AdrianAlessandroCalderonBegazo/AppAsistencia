@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   List<AttendanceMark> _todayMarks = [];
   int _pendingSyncCount = 0;
   bool _loadingToday = true;
+  Object? _todayError;
   MarkType? _submittingType;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
@@ -64,7 +65,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadToday() async {
-    setState(() => _loadingToday = true);
+    setState(() {
+      _loadingToday = true;
+      _todayError = null;
+    });
     // El backend gratuito de Render puede tardar unos segundos en despertar tras estar
     // inactivo: se reintenta una vez antes de rendirse y dejar la lista como estaba.
     for (var attempt = 1; attempt <= 2; attempt++) {
@@ -77,8 +81,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           _pendingSyncCount = pending;
         });
         break;
-      } catch (_) {
-        if (attempt == 2 || !mounted) break;
+      } catch (e) {
+        if (attempt == 2) {
+          if (mounted) setState(() => _todayError = e);
+          break;
+        }
+        if (!mounted) break;
         await Future.delayed(const Duration(seconds: 4));
       }
     }
@@ -226,14 +234,60 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             const SizedBox(height: 24),
             Text('Marcas de hoy', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
+            if (_todayError != null) _TodayErrorBanner(error: _todayError!, onRetry: _loadToday),
             if (_loadingToday)
               const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+            else if (_todayError != null)
+              const SizedBox.shrink()
             else if (_todayMarks.isEmpty)
               const Padding(padding: EdgeInsets.all(16), child: Text('Todavía no tienes marcas hoy'))
             else
               ..._todayMarks.map((mark) => _TodayMarkTile(mark: mark, onUndo: () => _undo(mark))),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Antes, un fallo al cargar "hoy" se tragaba en silencio y la pantalla quedaba igual que si
+/// el empleado no tuviera marcas — indistinguible de un día realmente vacío. Ahora se muestra
+/// el error (con el detalle técnico crudo, útil para diagnosticar) en vez de fingir que no hay nada.
+class _TodayErrorBanner extends StatelessWidget {
+  const _TodayErrorBanner({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.semanticColors;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.dangerBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.dangerBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'No se pudieron cargar tus marcas de hoy: ${friendlyErrorMessage(error)}',
+            style: TextStyle(color: colors.dangerText, fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            error.toString(),
+            style: TextStyle(color: colors.dangerText, fontSize: 11),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(onPressed: onRetry, child: const Text('Reintentar')),
+          ),
+        ],
       ),
     );
   }
