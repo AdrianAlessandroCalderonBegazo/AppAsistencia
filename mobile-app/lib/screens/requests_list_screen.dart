@@ -39,11 +39,10 @@ class _RequestsListScreenState extends State<RequestsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Solicitudes')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openNewRequest,
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva solicitud'),
-      ),
+      // El botón vive dentro del scroll (al final de la lista, o centrado si no hay
+      // solicitudes) en vez de ser un FloatingActionButton: como flotante, al agregar la
+      // app a la pantalla de inicio en iOS quedaba tapado por el área segura del sistema
+      // (barra inferior) y el empleado no podía tocarlo.
       body: RefreshIndicator(
         onRefresh: () async => setState(_load),
         child: FutureBuilder<List<CorrectionRequest>>(
@@ -57,22 +56,59 @@ class _RequestsListScreenState extends State<RequestsListScreen> {
             }
             final requests = snapshot.data ?? [];
             if (requests.isEmpty) {
-              return ListView(
-                padding: const EdgeInsets.all(24),
-                children: const [
-                  SizedBox(height: 80),
-                  Center(child: Text('Todavía no has enviado solicitudes')),
-                ],
+              return LayoutBuilder(
+                builder: (context, constraints) => ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(24),
+                  children: [
+                    ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('Todavía no has enviado solicitudes'),
+                            const SizedBox(height: 20),
+                            _NewRequestButton(onPressed: _openNewRequest),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               );
             }
             return ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
-              itemCount: requests.length,
-              itemBuilder: (context, index) => _RequestTile(request: requests[index]),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              itemCount: requests.length + 1,
+              itemBuilder: (context, index) {
+                if (index == requests.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Center(child: _NewRequestButton(onPressed: _openNewRequest)),
+                  );
+                }
+                return _RequestTile(request: requests[index]);
+              },
             );
           },
         ),
       ),
+    );
+  }
+}
+
+class _NewRequestButton extends StatelessWidget {
+  const _NewRequestButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.add),
+      label: const Text('Nueva solicitud'),
     );
   }
 }
