@@ -52,9 +52,9 @@ class AttendanceService {
       final response = await _client.dio.post('/attendance', data: mark.toSubmitJson());
       return AttendanceMark.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      // Si el servidor respondió (aunque sea rechazando la marca, ej. "entrada fuera del
-      // área"), eso es una decisión real, no un problema de red: hay que mostrársela al
-      // empleado, no esconderla en la cola offline como si fuera a reintentarse sola.
+      // Si el servidor respondió (aunque sea rechazando la marca, ej. tipo de marca inválido),
+      // eso es una decisión real, no un problema de red: hay que mostrársela al empleado, no
+      // esconderla en la cola offline como si fuera a reintentarse sola.
       if (e.response != null) rethrow;
       // Sin respuesta del servidor (sin conexión, timeout, servidor caído): ahí sí se
       // encola para no perder la marca.

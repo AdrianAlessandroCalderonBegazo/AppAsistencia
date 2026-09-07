@@ -6,6 +6,7 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
+import 'services/navigation_service.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
@@ -31,12 +32,16 @@ class AsistenciaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Control de asistencia',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system,
       home: const _StartupGate(),
+      // Usada por el interceptor de sesión expirada en api_client.dart para volver al login
+      // sin tener que importar pantallas desde la capa de servicios.
+      routes: {'/login': (_) => const LoginScreen()},
     );
   }
 }

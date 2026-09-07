@@ -97,21 +97,16 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
 
   const { distanceMeters, withinArea } = isWithinAnySite(lat, lng, sites);
 
-  // La entrada es la única marca que exige estar físicamente en la sede: sin ella no hay
-  // certeza de que la jornada empezó en el lugar de trabajo, así que se rechaza directamente
-  // (nunca se confía en nada enviado por el cliente, la decisión es siempre del servidor).
-  // Almuerzo/regreso de almuerzo no lo exigen. La salida se permite fuera del área, pero
-  // queda marcada como anomalía para que el admin la revise (ver más abajo).
-  if (tipoMarca === 'entrada' && !withinArea) {
-    throw Object.assign(
-      new Error('No se puede marcar la entrada fuera del área permitida de tus sedes asignadas.'),
-      { status: 403 }
-    );
-  }
-
   const orderAnomaly = await detectAnomaly(empleadoId, fecha, tipoMarca);
   const motivos = [];
   if (orderAnomaly.esAnomalia) motivos.push(orderAnomaly.motivo);
+  // Ninguna marca bloquea por ubicación: hay empleados que trabajan en campo y empiezan/terminan
+  // su jornada fuera de cualquier sede. Se permite siempre, pero queda como observación (con
+  // ubicación y distancia guardadas) para que el admin la revise — nunca se confía "a ciegas"
+  // en que el empleado estaba donde dice, solo se deja de bloquear el registro.
+  if (tipoMarca === 'entrada' && !withinArea) {
+    motivos.push('Entrada marcada fuera del área permitida de las sedes asignadas.');
+  }
   if (tipoMarca === 'salida' && !withinArea) {
     motivos.push('Salida marcada fuera del área permitida de las sedes asignadas.');
   }

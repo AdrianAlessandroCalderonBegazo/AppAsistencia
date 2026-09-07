@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'location_service.dart';
+import 'navigation_service.dart';
 
 /// Base URL configurable en build/run time: flutter run --dart-define=API_BASE_URL=https://...
 const _defaultBaseUrl = 'http://localhost:3000/api';
@@ -28,8 +29,25 @@ class ApiClient {
         if (token != null) options.headers['Authorization'] = 'Bearer $token';
         handler.next(options);
       },
+      onError: (error, handler) async {
+        // Un 401 en una request que sí llevaba token es una sesión vencida/inválida (el JWT
+        // expira a las pocas horas y el cliente no maneja refresh token): antes se quedaba
+        // mostrando un error de "token inválido" sin salida; ahora se cierra la sesión sola y
+        // se vuelve al login, sin esperar a que el empleado lo note y reabra la app a mano.
+        final teniaToken = error.requestOptions.headers.containsKey('Authorization');
+        if (error.response?.statusCode == 401 && teniaToken && !_redirigiendoAlLogin) {
+          _redirigiendoAlLogin = true;
+          await clearToken();
+          pendingLoginMessage = 'Tu sesión expiró, inicia sesión de nuevo.';
+          await navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+          _redirigiendoAlLogin = false;
+        }
+        handler.next(error);
+      },
     ));
   }
+
+  bool _redirigiendoAlLogin = false;
 
   static final ApiClient instance = ApiClient._internal();
 

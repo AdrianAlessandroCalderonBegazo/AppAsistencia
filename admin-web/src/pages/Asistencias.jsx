@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Pencil, History, Trash2, RotateCcw } from 'lucide-react'
+import { Pencil, History, Trash2, RotateCcw, MapPin } from 'lucide-react'
 import { getEmpleados, getAsistencias, updateAsistenciaAdmin } from '../api/resources.js'
 import { PageHeader, Card, Select, Input, Button, Textarea, Banner, EmptyState } from '../components/ui.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import DataTable from '../components/DataTable.jsx'
 import Modal from '../components/Modal.jsx'
+import AttendanceMap from '../components/AttendanceMap.jsx'
 import { todayIso, daysAgoIso } from '../utils/date.js'
 
 const TIPOS_MARCA = [
@@ -48,9 +49,17 @@ export default function Asistencias() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
 
+  const [mapTarget, setMapTarget] = useState(null)
+  const [sitesByEmployee, setSitesByEmployee] = useState(new Map())
+
   useEffect(() => {
     getEmpleados()
-      .then((data) => setEmpleados((data || []).filter((e) => e.estado === 'activo')))
+      .then((data) => {
+        setEmpleados((data || []).filter((e) => e.estado === 'activo'))
+        const map = new Map()
+        for (const emp of data || []) map.set(emp.id, emp.sedes || [])
+        setSitesByEmployee(map)
+      })
       .catch(() => {})
   }, [])
 
@@ -151,7 +160,18 @@ export default function Asistencias() {
     {
       key: 'area',
       header: 'Ubicación',
-      render: (row) => <StatusPill status={row.dentro_area ? 'dentro_area' : 'fuera_area'} />,
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <StatusPill status={row.dentro_area ? 'dentro_area' : 'fuera_area'} />
+          <button
+            onClick={() => setMapTarget(row)}
+            title="Ver en el mapa"
+            className="rounded-full p-1 text-zinc-400 hover:bg-neutral-bg hover:text-accent-solid dark:hover:bg-zinc-800"
+          >
+            <MapPin size={16} />
+          </button>
+        </div>
+      ),
     },
     {
       key: 'badges',
@@ -326,6 +346,34 @@ export default function Asistencias() {
             required
           />
           {deleteError && <Banner tone="danger">{deleteError}</Banner>}
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!mapTarget}
+        onClose={() => setMapTarget(null)}
+        title="Ubicación de la marca"
+        size="lg"
+        footer={
+          <Button variant="secondary" onClick={() => setMapTarget(null)}>
+            Cerrar
+          </Button>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {mapTarget?.empleado_nombre} · {tipoLabel(mapTarget?.tipo_marca)} ·{' '}
+            {mapTarget && !mapTarget.dentro_area && mapTarget.distancia_metros != null
+              ? `a ${Math.round(mapTarget.distancia_metros)} m de la sede más cercana`
+              : 'dentro del área asignada'}
+          </p>
+          {mapTarget && (
+            <AttendanceMap
+              lat={mapTarget.latitud}
+              lng={mapTarget.longitud}
+              sites={sitesByEmployee.get(mapTarget.empleado_id) || []}
+            />
+          )}
         </div>
       </Modal>
     </div>

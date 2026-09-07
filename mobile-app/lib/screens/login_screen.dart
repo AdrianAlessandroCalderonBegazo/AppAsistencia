@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../services/navigation_service.dart';
 import 'change_password_screen.dart';
 import 'home_screen.dart';
 
@@ -20,6 +21,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _loading = false;
   bool _obscure = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (pendingLoginMessage != null) {
+      final mensaje = pendingLoginMessage!;
+      pendingLoginMessage = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
+      });
+    }
+  }
 
   @override
   void dispose() {

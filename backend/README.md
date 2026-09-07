@@ -66,11 +66,12 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
   empleado (nunca confía en un "isValid" del cliente). `fecha` (YYYY-MM-DD, calendario local del
   dispositivo) es opcional pero recomendada — si se omite, se deriva de `horaMarcada` en UTC, lo
   que puede desfasar un día según la zona horaria del empleado.
-  Reglas de ubicación por tipo de marca:
-  - `entrada`: **se rechaza (403)** si no está dentro del radio de ninguna sede asignada.
+  Reglas de ubicación por tipo de marca: ninguna marca bloquea por ubicación (hay empleados que
+  trabajan en campo y empiezan/terminan su jornada fuera de cualquier sede asignada).
+  - `entrada` / `salida`: se aceptan desde cualquier lugar, pero si quedan fuera de todas las
+    sedes asignadas se marcan `es_anomalia = true` con `motivo_anomalia` explicando el motivo
+    (con `latitud`/`longitud`/`distancia_metros` ya guardados), para que el admin la revise.
   - `salida_almuerzo` / `regreso_almuerzo`: sin restricción de ubicación.
-  - `salida`: se acepta desde cualquier lugar, pero si queda fuera de todas las sedes se marca
-    `es_anomalia = true` con `motivo_anomalia` explicando el motivo, para que el admin la revise.
   - Duplicados o marcas fuera del orden esperado también quedan como `es_anomalia`, sin bloquear.
   - Si el empleado tiene un horario activo (`/schedules`) para ese día de la semana, marcar fuera
     de la tolerancia configurada (`entrada` tarde, `salida` temprano, almuerzo fuera de horario)
