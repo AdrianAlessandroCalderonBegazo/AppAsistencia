@@ -11,8 +11,7 @@ const initialForm = {
   sedeIds: [],
   horaEntrada: '08:00',
   horaSalida: '17:00',
-  horaInicioAlmuerzo: '13:00',
-  horaFinAlmuerzo: '14:00',
+  duracionAlmuerzoMinutos: 60,
   toleranciaMinutos: 10,
   diasSemana: DIAS_LABORALES_DEFAULT,
 }
@@ -78,8 +77,7 @@ export default function EmpleadoAlta() {
         horarioInicial: {
           horaEntrada: form.horaEntrada,
           horaSalida: form.horaSalida,
-          horaInicioAlmuerzo: form.horaInicioAlmuerzo || null,
-          horaFinAlmuerzo: form.horaFinAlmuerzo || null,
+          duracionAlmuerzoMinutos: Number(form.duracionAlmuerzoMinutos) || null,
           toleranciaMinutos: Number(form.toleranciaMinutos) || 0,
           diasSemana: form.diasSemana,
         },
@@ -208,27 +206,23 @@ export default function EmpleadoAlta() {
               required
             />
             <Input
-              label="Inicio de almuerzo"
-              type="time"
-              value={form.horaInicioAlmuerzo}
-              onChange={(e) => update('horaInicioAlmuerzo', e.target.value)}
+              label="Duración de almuerzo (minutos)"
+              type="number"
+              min="0"
+              step="5"
+              value={form.duracionAlmuerzoMinutos}
+              onChange={(e) => update('duracionAlmuerzoMinutos', e.target.value)}
+              hint="Se puede tomar en cualquier momento de la jornada, no a una hora fija"
             />
             <Input
-              label="Fin de almuerzo"
-              type="time"
-              value={form.horaFinAlmuerzo}
-              onChange={(e) => update('horaFinAlmuerzo', e.target.value)}
+              label="Tolerancia (minutos)"
+              type="number"
+              min="0"
+              value={form.toleranciaMinutos}
+              onChange={(e) => update('toleranciaMinutos', e.target.value)}
+              hint="Minutos de gracia antes de marcar una llegada tardía, salida anticipada o almuerzo excedido"
             />
           </div>
-
-          <Input
-            label="Tolerancia (minutos)"
-            type="number"
-            min="0"
-            value={form.toleranciaMinutos}
-            onChange={(e) => update('toleranciaMinutos', e.target.value)}
-            hint="Minutos de gracia antes de marcar una llegada como tarde"
-          />
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => navigate('/')}>

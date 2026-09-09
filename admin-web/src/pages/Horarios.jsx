@@ -8,8 +8,7 @@ const emptyHorario = {
   id: null,
   horaEntrada: '08:00',
   horaSalida: '17:00',
-  horaInicioAlmuerzo: '13:00',
-  horaFinAlmuerzo: '14:00',
+  duracionAlmuerzoMinutos: 60,
   toleranciaMinutos: 10,
   diasSemana: DIAS_LABORALES_DEFAULT,
 }
@@ -60,8 +59,7 @@ export default function Horarios() {
             id: existing.id,
             horaEntrada: toInputTime(existing.hora_entrada, '08:00'),
             horaSalida: toInputTime(existing.hora_salida, '17:00'),
-            horaInicioAlmuerzo: toInputTime(existing.hora_inicio_almuerzo, '13:00'),
-            horaFinAlmuerzo: toInputTime(existing.hora_fin_almuerzo, '14:00'),
+            duracionAlmuerzoMinutos: existing.duracion_almuerzo_minutos ?? 60,
             toleranciaMinutos: existing.tolerancia_minutos ?? 10,
             diasSemana: existing.dias_semana || [],
           })
@@ -98,8 +96,7 @@ export default function Horarios() {
         empleadoId: Number(empleadoId),
         horaEntrada: horario.horaEntrada,
         horaSalida: horario.horaSalida,
-        horaInicioAlmuerzo: horario.horaInicioAlmuerzo || null,
-        horaFinAlmuerzo: horario.horaFinAlmuerzo || null,
+        duracionAlmuerzoMinutos: Number(horario.duracionAlmuerzoMinutos) || null,
         toleranciaMinutos: Number(horario.toleranciaMinutos) || 0,
         diasSemana: horario.diasSemana,
       }
@@ -187,27 +184,21 @@ export default function Horarios() {
             onChange={(e) => update('horaSalida', e.target.value)}
           />
           <Input
-            label="Inicio de almuerzo"
-            type="time"
-            value={horario.horaInicioAlmuerzo}
-            onChange={(e) => update('horaInicioAlmuerzo', e.target.value)}
+            label="Duración de almuerzo (minutos)"
+            type="number"
+            min="0"
+            step="5"
+            value={horario.duracionAlmuerzoMinutos}
+            onChange={(e) => update('duracionAlmuerzoMinutos', e.target.value)}
+            hint="Se puede tomar en cualquier momento de la jornada, no a una hora fija"
           />
-          <Input
-            label="Fin de almuerzo"
-            type="time"
-            value={horario.horaFinAlmuerzo}
-            onChange={(e) => update('horaFinAlmuerzo', e.target.value)}
-          />
-        </div>
-
-        <div className="mt-4">
           <Input
             label="Tolerancia (minutos)"
             type="number"
             min="0"
             value={horario.toleranciaMinutos}
             onChange={(e) => update('toleranciaMinutos', e.target.value)}
-            hint="Minutos de gracia antes de marcar una llegada como tarde"
+            hint="Minutos de gracia antes de marcar entrada tardía, salida anticipada o almuerzo excedido"
           />
         </div>
 

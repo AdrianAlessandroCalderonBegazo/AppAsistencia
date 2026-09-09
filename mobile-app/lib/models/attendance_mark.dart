@@ -115,6 +115,9 @@ class AttendanceMark {
     if (motivo.contains('se retiró antes')) {
       return 'Se registró, pero saliste antes de tu horario';
     }
+    if (motivo.contains('excede la duración')) {
+      return 'Se registró, pero excediste el tiempo de almuerzo asignado';
+    }
     if (motivo.contains('fuera de horario')) {
       return 'Se registró, pero fuera de tu horario asignado';
     }

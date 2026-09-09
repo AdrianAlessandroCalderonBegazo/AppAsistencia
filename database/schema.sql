@@ -55,13 +55,26 @@ CREATE TABLE IF NOT EXISTS horarios (
   dias_semana         SMALLINT[] NOT NULL, -- 0=domingo .. 6=sábado
   hora_entrada        TIME NOT NULL,
   hora_salida         TIME NOT NULL,
-  hora_inicio_almuerzo TIME,
-  hora_fin_almuerzo   TIME,
+  hora_inicio_almuerzo TIME, -- histórico: ver duracion_almuerzo_minutos, el almuerzo ya no tiene horario fijo
+  hora_fin_almuerzo   TIME,  -- histórico, idem
+  duracion_almuerzo_minutos INTEGER, -- cuánto dura el almuerzo (ej. 60, 90); se puede tomar en cualquier momento de la jornada
   tolerancia_minutos  INTEGER NOT NULL DEFAULT 10,
   activo              BOOLEAN NOT NULL DEFAULT true,
   creado_en           TIMESTAMPTZ NOT NULL DEFAULT now(),
   actualizado_en      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Migración para bases ya existentes (CREATE TABLE de arriba no toca una tabla que ya existe):
+-- agrega la columna nueva y, si ya había horarios con ventana fija de almuerzo, calcula su
+-- duración a partir de esa ventana para no perder la configuración existente.
+ALTER TABLE horarios ADD COLUMN IF NOT EXISTS duracion_almuerzo_minutos INTEGER;
+
+UPDATE horarios
+SET duracion_almuerzo_minutos = EXTRACT(EPOCH FROM (hora_fin_almuerzo - hora_inicio_almuerzo)) / 60
+WHERE duracion_almuerzo_minutos IS NULL
+  AND hora_inicio_almuerzo IS NOT NULL
+  AND hora_fin_almuerzo IS NOT NULL
+  AND hora_fin_almuerzo > hora_inicio_almuerzo;
 
 CREATE TABLE IF NOT EXISTS asistencias (
   id                SERIAL PRIMARY KEY,

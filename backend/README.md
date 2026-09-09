@@ -73,11 +73,15 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
     (con `latitud`/`longitud`/`distancia_metros` ya guardados), para que el admin la revise.
   - `salida_almuerzo` / `regreso_almuerzo`: sin restricción de ubicación.
   - Duplicados o marcas fuera del orden esperado también quedan como `es_anomalia`, sin bloquear.
-  - Si el empleado tiene un horario activo (`/schedules`) para ese día de la semana, marcar fuera
-    de la tolerancia configurada (`entrada` tarde, `salida` temprano, almuerzo fuera de horario)
-    también queda como `es_anomalia`, sin bloquear. Requiere el campo opcional `horaLocal`
-    (HH:mm, hora de reloj del empleado — no UTC); si se omite se deriva de `horaMarcada` en la
-    zona horaria del servidor, lo que puede ser impreciso.
+  - Si el empleado tiene un horario activo (`/schedules`) para ese día de la semana, marcar
+    `entrada` tarde o `salida` temprano fuera de la tolerancia configurada queda como
+    `es_anomalia`, sin bloquear. Requiere el campo opcional `horaLocal` (HH:mm, hora de reloj del
+    empleado — no UTC); si se omite se deriva de `horaMarcada` en la zona horaria del servidor,
+    lo que puede ser impreciso.
+  - El almuerzo **no tiene horario fijo** (se puede tomar en cualquier momento de la jornada):
+    al marcar `regreso_almuerzo` se compara el tiempo transcurrido desde la última
+    `salida_almuerzo` del día contra `duracion_almuerzo_minutos` del horario (+ tolerancia); si
+    se excede, también queda como `es_anomalia`, sin bloquear.
 - `POST /attendance/sync` — sincronización offline: `{ marcas: [...] }`, origen `offline_sync`,
   valida geolocalización al momento de sincronizar (mismas reglas de arriba) y marca
   `sincronizacion_tardia` si pasó más de 1 hora entre `horaMarcada` y ahora.
@@ -108,6 +112,11 @@ Todas las rutas debajo de esta lista requieren `Authorization: Bearer <accessTok
 - `GET /schedules/me` — cualquier usuario autenticado; horario activo del propio empleado.
 - El resto requiere admin — CRUD sobre `horarios`: `GET /schedules/employee/:empleadoId`,
   `POST /schedules`, `PATCH /schedules/:id`, `DELETE /schedules/:id` (desactiva en vez de borrar).
+- Campos: `empleadoId`, `diasSemana`, `horaEntrada`, `horaSalida` (requeridos),
+  `duracionAlmuerzoMinutos` (opcional — minutos de almuerzo asignados; se puede tomar en
+  cualquier momento de la jornada, no a una hora fija) y `toleranciaMinutos` (default 10).
+  `horaInicioAlmuerzo`/`horaFinAlmuerzo` quedan como columnas históricas en la base de datos,
+  ya no se leen ni se escriben.
 
 ### Sedes (`/sites`)
 `GET /sites` (cualquier usuario autenticado), `POST/PATCH/DELETE /sites` (admin) sobre

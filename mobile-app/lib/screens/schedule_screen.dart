@@ -45,17 +45,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               _ScheduleRow(icon: Icons.event_outlined, label: 'Días', value: schedule.nombresDias.join(', ')),
               _ScheduleRow(icon: Icons.login_outlined, label: 'Hora de entrada', value: schedule.horaEntrada),
               _ScheduleRow(icon: Icons.logout_outlined, label: 'Hora de salida', value: schedule.horaSalida),
-              if (schedule.horaInicioAlmuerzo != null)
+              if (schedule.duracionAlmuerzoMinutos != null)
                 _ScheduleRow(
                   icon: Icons.lunch_dining_outlined,
-                  label: 'Inicio de almuerzo',
-                  value: schedule.horaInicioAlmuerzo!,
-                ),
-              if (schedule.horaFinAlmuerzo != null)
-                _ScheduleRow(
-                  icon: Icons.restaurant_outlined,
-                  label: 'Fin de almuerzo',
-                  value: schedule.horaFinAlmuerzo!,
+                  label: 'Duración de almuerzo',
+                  value: '${schedule.duracionAlmuerzoMinutos} minutos, en cualquier momento de tu jornada',
                 ),
               _ScheduleRow(
                 icon: Icons.timer_outlined,

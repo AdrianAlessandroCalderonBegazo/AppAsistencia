@@ -43,6 +43,8 @@ function timeStringToMinutes(t) {
 
 // No bloquea nada (igual que el resto de anomalías): solo avisa si la marca cae fuera del
 // horario asignado del empleado, con la tolerancia configurada, para que el admin la revise.
+// El almuerzo no tiene horario fijo (se valida su DURACIÓN aparte, ver detectAlmuerzoExcedido):
+// cada empleado puede tomarlo en cualquier momento de su jornada, según cuánto le corresponda.
 function detectHorarioAnomaly(horario, tipoMarca, horaLocal) {
   if (!horario || !horaLocal) return null;
   const marcadaMin = timeStringToMinutes(horaLocal);
@@ -56,14 +58,30 @@ function detectHorarioAnomaly(horario, tipoMarca, horaLocal) {
     if (marcadaMin < timeStringToMinutes(horario.hora_salida) - tolerancia) {
       return 'Salida marcada fuera de horario (se retiró antes de tiempo).';
     }
-  } else if (tipoMarca === 'salida_almuerzo' && horario.hora_inicio_almuerzo) {
-    if (marcadaMin > timeStringToMinutes(horario.hora_inicio_almuerzo) + tolerancia) {
-      return 'Salida a almuerzo marcada fuera de horario.';
-    }
-  } else if (tipoMarca === 'regreso_almuerzo' && horario.hora_fin_almuerzo) {
-    if (marcadaMin > timeStringToMinutes(horario.hora_fin_almuerzo) + tolerancia) {
-      return 'Regreso de almuerzo marcado fuera de horario (tardanza).';
-    }
+  }
+  return null;
+}
+
+// Al marcar el regreso de almuerzo, compara cuánto tiempo pasó desde la última "salida_almuerzo"
+// del mismo día contra la duración de almuerzo asignada en el horario (+ tolerancia). No bloquea:
+// solo queda como observación si se excedió.
+async function detectAlmuerzoExcedido(empleadoId, fecha, horaMarcada, horario) {
+  if (!horario || !horario.duracion_almuerzo_minutos) return null;
+
+  const { rows } = await query(
+    `SELECT hora_marcada FROM asistencias
+     WHERE empleado_id = $1 AND fecha = $2 AND tipo_marca = 'salida_almuerzo' AND anulada = false
+     ORDER BY hora_marcada DESC LIMIT 1`,
+    [empleadoId, fecha]
+  );
+  const salida = rows[0];
+  if (!salida) return null;
+
+  const minutosTomados = (new Date(horaMarcada).getTime() - new Date(salida.hora_marcada).getTime()) / 60000;
+  const tolerancia = horario.tolerancia_minutos ?? 0;
+  const limite = horario.duracion_almuerzo_minutos + tolerancia;
+  if (minutosTomados > limite) {
+    return `Regreso de almuerzo excede la duración asignada (tomó ${Math.round(minutosTomados)} min, correspondían ${horario.duracion_almuerzo_minutos} min).`;
   }
   return null;
 }
@@ -113,6 +131,10 @@ async function insertMark({ empleadoId, fecha, tipoMarca, horaMarcada, lat, lng,
   const horario = await getHorarioDelDia(empleadoId, fecha);
   const horarioAnomaly = detectHorarioAnomaly(horario, tipoMarca, horaLocal);
   if (horarioAnomaly) motivos.push(horarioAnomaly);
+  if (tipoMarca === 'regreso_almuerzo') {
+    const almuerzoAnomaly = await detectAlmuerzoExcedido(empleadoId, fecha, horaMarcada, horario);
+    if (almuerzoAnomaly) motivos.push(almuerzoAnomaly);
+  }
   const esAnomalia = motivos.length > 0;
   const motivo = motivos.length > 0 ? motivos.join(' ') : null;
 

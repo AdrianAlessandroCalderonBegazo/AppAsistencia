@@ -64,15 +64,14 @@ router.post('/', requireRole('admin'), async (req, res) => {
     if (horarioInicial) {
       const h = horarioInicial;
       await query(
-        `INSERT INTO horarios (empleado_id, dias_semana, hora_entrada, hora_salida, hora_inicio_almuerzo, hora_fin_almuerzo, tolerancia_minutos)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        `INSERT INTO horarios (empleado_id, dias_semana, hora_entrada, hora_salida, duracion_almuerzo_minutos, tolerancia_minutos)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           empleado.id,
           h.diasSemana,
           h.horaEntrada,
           h.horaSalida,
-          h.horaInicioAlmuerzo || null,
-          h.horaFinAlmuerzo || null,
+          h.duracionAlmuerzoMinutos || null,
           h.toleranciaMinutos ?? 10,
         ]
       );

@@ -25,15 +25,15 @@ router.get('/employee/:empleadoId', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { empleadoId, diasSemana, horaEntrada, horaSalida, horaInicioAlmuerzo, horaFinAlmuerzo, toleranciaMinutos } = req.body;
+  const { empleadoId, diasSemana, horaEntrada, horaSalida, duracionAlmuerzoMinutos, toleranciaMinutos } = req.body;
   if (!empleadoId || !diasSemana || !horaEntrada || !horaSalida) {
     return res.status(400).json({ error: 'empleadoId, diasSemana, horaEntrada y horaSalida son requeridos.' });
   }
 
   const { rows } = await query(
-    `INSERT INTO horarios (empleado_id, dias_semana, hora_entrada, hora_salida, hora_inicio_almuerzo, hora_fin_almuerzo, tolerancia_minutos)
-     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [empleadoId, diasSemana, horaEntrada, horaSalida, horaInicioAlmuerzo || null, horaFinAlmuerzo || null, toleranciaMinutos ?? 10]
+    `INSERT INTO horarios (empleado_id, dias_semana, hora_entrada, hora_salida, duracion_almuerzo_minutos, tolerancia_minutos)
+     VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+    [empleadoId, diasSemana, horaEntrada, horaSalida, duracionAlmuerzoMinutos || null, toleranciaMinutos ?? 10]
   );
   res.status(201).json(rows[0]);
 });
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   const campoPorClave = {
     diasSemana: 'dias_semana', horaEntrada: 'hora_entrada', horaSalida: 'hora_salida',
-    horaInicioAlmuerzo: 'hora_inicio_almuerzo', horaFinAlmuerzo: 'hora_fin_almuerzo',
+    duracionAlmuerzoMinutos: 'duracion_almuerzo_minutos',
     toleranciaMinutos: 'tolerancia_minutos', activo: 'activo',
   };
   const sets = [];
